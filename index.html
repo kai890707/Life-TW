@@ -514,9 +514,19 @@ const TRACKS={
     {t:"人氣看板女神",income:1500000,y:3,req:{chr:70}},
     {t:"應援天花板／隊長",income:4500000,y:7,req:{chr:82}},
   ]},
+  baseball:{nm:"職棒選手",ranks:[
+    {t:"職棒新秀",income:900000},
+    {t:"一軍主力",income:2600000,y:3,req:{con:65}},
+    {t:"看板球星",income:8000000,y:7,req:{con:78}},
+  ]},
+  esports:{nm:"電競選手",ranks:[
+    {t:"電競戰隊隊員",income:700000},
+    {t:"職業戰隊主力",income:2000000,y:2,req:{int:60}},
+    {t:"世界冠軍選手",income:9000000,y:5,req:{int:70}},
+  ]},
 };
-const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6};
-const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀"};
+const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6,baseball:7,esports:6};
+const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀",baseball:"⚾",esports:"🎮"};
 /* 出社會：職涯與「主專長＋學歷」綁定，大部分人順著專長走，少數斜槓 */
 function topSkill(S){let best=null,bx=SK_THRESH[0]-1;for(const sd of SKILLS){const x=skXp(sd.k);if(x>bx){bx=x;best=sd;}}return best;}
 function careerReady(S){
@@ -575,10 +585,10 @@ function enterTrack(S,id,silent){
   if(!silent) mile(S,"💼","出社會，成為「"+TRACKS[id].ranks[0].t+"」");
 }
 // 各職涯對應的「本職專長」——把骰子練進本職專長，升遷更快、也能補足能力門檻
-const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art"};
+const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art",baseball:"ath",esports:"tech"};
 function tryPromote(S){
   if(S.stateOverride) return;
-  if(["politics","star","creator","cheer"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體／啦啦隊靠人氣，不是年資升遷
+  if(["politics","star","creator","cheer","baseball","esports"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體／啦啦隊／職棒／電競靠戰績人氣，不是年資升遷
   const tr=TRACKS[S.track]; if(!tr) return;
   const nx=tr.ranks[S.rank+1]; if(!nx) return;
   const tenure=S.age-S.trackStart;
@@ -638,6 +648,12 @@ const ACHIEVEMENTS=[
   {id:"cultVictim",icon:"🛐",nm:"邪教供養信徒",c:S=>S.flags.cultVictim},
   {id:"veteran",icon:"🪖",nm:"當過兵的男人",c:S=>S.flags.conscript},
   {id:"exempt",icon:"🎫",nm:"免役一族",c:S=>S.flags.exempt},
+  {id:"draftFraud",icon:"🕵️",nm:"免役舞弊富少",c:S=>S.flags.fakeExempt},
+  {id:"fugitive",icon:"🛫",nm:"逃兵通緝犯",c:S=>S.flags.fugitive||S.flags.amnesty||S.flags.settledAbroad},
+  {id:"settledAbroad",icon:"🏝️",nm:"異鄉落地生根",c:S=>S.flags.settledAbroad},
+  {id:"amnesty",icon:"🕊️",nm:"大赦回國",c:S=>S.flags.amnesty},
+  {id:"stageRush",icon:"🎤",nm:"演出現場出包",c:S=>S.flags.stageRush},
+  {id:"boycotted",icon:"📛",nm:"不敬業遭抵制",c:S=>S.flags.boycotted},
   {id:"twRichest",icon:"🥇",nm:"台灣首富",c:S=>S.flags.twRichest},
   {id:"worldRichest",icon:"🌍",nm:"世界首富",c:S=>S.flags.worldRichest},
   {id:"forbes",icon:"📋",nm:"富比世富豪榜",c:S=>S.peak.money>=3e10},
@@ -687,6 +703,14 @@ const ACHIEVEMENTS=[
   {id:"cryptoRich",icon:"🪙",nm:"幣圈翻身",c:S=>S.flags.cryptoRich},
   {id:"cheer",icon:"🎀",nm:"應援女神",c:S=>S.peakTrack==="cheer"},
   {id:"cheerViral",icon:"📣",nm:"應援爆紅",c:S=>S.flags.cheerStar},
+  {id:"ballStar",icon:"⚾",nm:"職棒球星",c:S=>S.peakTrack==="baseball"},
+  {id:"overseasBall",icon:"🌏",nm:"旅外球員",c:S=>S.flags.overseasBall},
+  {id:"ballBanned",icon:"📛",nm:"假球案禁賽",c:S=>S.flags.ballBanned},
+  {id:"esportsPlayer",icon:"🎮",nm:"職業電競選手",c:S=>S.peakTrack==="esports"},
+  {id:"esportChamp",icon:"🏆",nm:"電競世界冠軍",c:S=>S.flags.esportChamp},
+  {id:"gyb",icon:"🔥",nm:"GYB 讚！",c:S=>S.flags.gyb},
+  {id:"doping",icon:"💉",nm:"禁藥風波",c:S=>S.flags.doping},
+  {id:"noodleMLB",icon:"🍜",nm:"牛肉麵賣回大聯盟",c:S=>S.milestones&&S.milestones.some(m=>/賣牛肉麵賣回大聯盟/.test(m.text))},
   {id:"khMayor",icon:"🌊",nm:"高雄市長",c:S=>S.flags.khMayor},
   {id:"recalled",icon:"📛",nm:"被罷免下台",c:S=>S.flags.recalled},
   {id:"returnMyCow",icon:"🐮",nm:"還我牛",c:S=>S.flags.returnMyCow},
@@ -1307,7 +1331,7 @@ const EV=[
     {t:"當立委就好",hint:"見好就收",eff:S=>inc(S,{happy:2}),res:S=>"你守住立委崗位。"},
   ]},
 /* ===== 高雄市長：一句「高雄發大財」的政治豪賭 ===== */
-{id:"選高雄市長",min:40,max:64,once:true,w:S=>(S.track==="politics"&&S.rank>=1&&!S.flags.mayor)?(S.region&&S.region.id==="khh"?120:60):0,cond:S=>S.track==="politics"&&S.rank>=1&&!S.flags.mayor,choice:true,q:"南方吹起一股旋風，黨內徵召你投入高雄市長選戰！",
+{id:"選高雄市長",min:40,max:64,once:true,w:S=>(S.track==="politics"&&S.rank>=1&&!S.flags.mayor&&!S.flags.wasPresident)?(S.region&&S.region.id==="khh"?120:60):0,cond:S=>S.track==="politics"&&S.rank>=1&&!S.flags.mayor&&!S.flags.wasPresident,choice:true,q:"南方吹起一股旋風，黨內徵召你投入高雄市長選戰！",
   options:[
     {t:"參選高雄市長！",hint:"風向來了、拚一波",eff:S=>{let win=chance(S,0.34+(S.stats.chr-62)*0.008+sk("talk")*0.03);S.money-=1500000;if(win){S.flags.mayor=true;S.flags.khMayor=true;S._preMayorIncome=S.income;S.income=3000000;schedule(S,1+rnd(2),"chain_bigFortune");mile(S,"🌊","翻轉南方，當選高雄市長！");return [...inc(S,{happy:12,chr:4}),...money(S,1000000)];}mile(S,"📉","高雄市長落選，鎩羽而歸");return inc(S,{happy:-7});},res:S=>S.flags.khMayor?"你披上彩帶入主高雄市政府！":"這場硬仗你輸了。"},
     {t:"守住立院崗位",hint:"不冒這個險",eff:S=>inc(S,{happy:1}),res:S=>"你選擇留在原本的位子。"},
@@ -1339,7 +1363,7 @@ const EV=[
   ]},
 {id:"死亡之握",min:30,max:78,once:true,w:S=>(S.track==="politics"&&S.rank>=1&&!S.flags.wasPresident&&!S.flags.deathShake)?9:0,cond:S=>S.track==="politics"&&S.rank>=1&&!S.flags.wasPresident,text:"黨內大場合，總統親切地走來與你握手、合影，鎂光燈閃個不停——但這可是傳說中會帶衰的「死亡之握」…",eff:S=>{S.flags.deathShake=true;let loss=Math.min(Math.max(300000,Math.round(Math.max(0,S.money)*0.06)),2500000);schedule(S,1+rnd(2),"chain_shakeCurse");mile(S,"🤝","被總統的『死亡之握』握到，衰運悄悄上身");return [...inc(S,{happy:-6,chr:-2,luck:-8}),...money(S,-loss)];}},
 {id:"chain_shakeCurse",chain:true,once:true,text:"「死亡之握」的衰運發酵：你莫名捲入一樁爭議、金流又離奇失利，媒體窮追猛打、民調直落。",eff:S=>{let loss=Math.min(Math.max(200000,Math.round(Math.max(0,S.money)*0.06)),2000000);return [...inc(S,{happy:-5,chr:-3,luck:-3}),...money(S,-loss)];}},
-{id:"立院打架",min:34,max:75,once:true,w:S=>(S.track==="politics"&&S.rank>=2)?14:0,cond:S=>S.track==="politics"&&S.rank>=2,choice:true,q:"審查爭議法案，朝野在議場推擠、潑水、丟豬內臟，眼看就要上演全武行…",
+{id:"立院打架",min:34,max:75,once:true,w:S=>(S.track==="politics"&&S.rank>=2&&!S.flags.wasPresident)?14:0,cond:S=>S.track==="politics"&&S.rank>=2&&!S.flags.wasPresident,choice:true,q:"審查爭議法案，朝野在議場推擠、潑水、丟豬內臟，眼看就要上演全武行…",
   options:[
     {t:"衝上主席台卡位肉搏",hint:"畫面很猛，但有受傷風險",eff:S=>{S.flags.brawl=true;let hurt=chance(S,0.65);if(hurt){S.health=clamp((S.health||50)-12,0,100);mile(S,"🚑","立院全武行，手被議事槌／門板夾傷，送醫急救");return inc(S,{con:-7,chr:1,happy:-4});}mile(S,"🥊","立院大亂鬥，你衝第一線搶下媒體版面");return inc(S,{chr:3,happy:1,con:-2});},res:S=>(S.health||50)<45?"混戰中你的手被夾個正著、血流不止，直接送醫縫合。":"你成了新聞畫面焦點，聲量大漲。"},
     {t:"退到後排、假裝滑手機",hint:"明哲保身",eff:S=>inc(S,{chr:-2,happy:1}),res:S=>"你選擇不淌這渾水，卻被酸『尸位素餐』。"},
@@ -1389,6 +1413,71 @@ const EV=[
     {t:"退役轉當經紀／教練",hint:"幕後發展",eff:S=>{enterTrack(S,"freelance",true);mile(S,"🎀","應援生涯退役，轉戰幕後");return inc(S,{happy:3});},res:S=>"你把舞台交給後輩，轉身幕後。"},
     {t:"用累積人氣創業",hint:"開手搖飲／網拍",eff:S=>{enterTrack(S,"boss",true);mile(S,"🚀","退役後用累積人氣創業當老闆");return inc(S,{happy:4});},res:S=>"你把粉絲變成顧客。"},
   ]},
+/* ===== 職棒選手：從選秀到看板球星（也可能捲入假球案） ===== */
+{id:"職棒選秀",min:18,max:26,once:true,w:S=>((S.stats.con>=62||sk("ath")>=2)&&["student","service","gig","blue","mil"].includes(S.track))?12:0,cond:S=>!["baseball","esports"].includes(S.track)&&(S.stats.con>=60||sk("ath")>=2),choice:true,q:"你棒球打得好，職棒球團在選秀會上相中你…",
+  options:[
+    {t:"投入職棒、簽約當新秀！",hint:"體魄＋運動天賦之路",eff:S=>{enterTrack(S,"baseball",true);S.flags.everBaseball=true;mile(S,"⚾","披上職棒戰袍，成為「職棒新秀」");return inc(S,{con:3,happy:6});},res:S=>"你站上職棒舞台，球場燈光為你而亮。"},
+    {t:"還是找份穩定工作",hint:"務實",eff:S=>inc(S,{happy:1}),res:S=>"你放下球棒，走上另一條路。"},
+  ]},
+{id:"球季拚戰",min:18,max:40,w:S=>(S.track==="baseball"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="baseball"&&S.rank<2,text:"球季開打，你日夜苦練打擊與守備、拚出賽機會與成績。",eff:S=>{const nx=TRACKS.baseball.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("ath")*0.05+(S.stats.con-65)*0.006)){S.rank++;S.income=nx.income;mile(S,"⚾","打出身價，晉升為「"+nx.t+"」");return inc(S,{happy:7,con:2});}return inc(S,{happy:-2,con:-1});}},
+{id:"開轟英雄",min:18,max:40,once:true,w:S=>(S.track==="baseball"&&S.rank>=1)?16:0,cond:S=>S.track==="baseball",text:"你在關鍵戰役轟出再見全壘打，全場暴動、登上運動頭條，成了球迷心中的英雄。",eff:S=>{S.connections=Math.min(100,S.connections+8);S.flags.ballStar=true;return inc(S,{chr:5,happy:8});}},
+{id:"旅外挑戰",min:20,max:34,once:true,w:S=>(S.track==="baseball"&&S.rank>=2)?24:0,cond:S=>S.track==="baseball"&&S.rank>=2,choice:true,q:"大聯盟／日職球探開出高薪合約，邀你旅外挑戰更高殿堂…",
+  options:[
+    {t:"旅外挑戰大聯盟！",hint:"高風險高報酬",eff:S=>{let ok=chance(S,0.4+sk("ath")*0.05+(S.stats.con-75)*0.006);if(ok){S.flags.overseasBall=true;S.income=Math.round(S.income*3.5);S.money+=30000000;mile(S,"🌏","旅外成功，站上大聯盟舞台");return inc(S,{happy:12,chr:4});}mile(S,"✈️","旅外水土不服，鎩羽回台");return inc(S,{happy:-6,con:-2});},res:S=>S.flags.overseasBall?"你在異國球場揚名，年薪翻了好幾倍！":"你適應不良，黯然回到中職。"},
+    {t:"根留台灣、當本土看板",hint:"安穩發展",eff:S=>[...inc(S,{happy:3}),...money(S,1000000)],res:S=>"你選擇留在熟悉的主場。"},
+  ]},
+{id:"運動傷害",min:18,max:42,once:true,w:S=>(S.track==="baseball"&&S.rank>=1)?10:0,cond:S=>S.track==="baseball",choice:true,q:"你的肩膀／膝蓋舊傷復發，痛到握不住球棒，醫生說要開刀…",
+  options:[
+    {t:"開刀＋長期復健拚回歸",hint:"燒錢也要救生涯",eff:S=>{let ok=chance(S,0.55);S.money-=800000;if(ok)return inc(S,{con:-3,happy:2});S.flags.ballRetireForced=true;mile(S,"🩼","傷勢惡化，被迫提早高掛球鞋");enterTrack(S,"freelance",true);return inc(S,{con:-6,happy:-6});},res:S=>S.track==="baseball"?"你咬牙復健，重返球場。":"傷病無情，你的球員生涯提前畫下句點。"},
+    {t:"帶傷硬撐上場",hint:"賭上身體",eff:S=>inc(S,{con:-8,happy:-3}),res:S=>"你打了封閉針硬撐，身體卻越來越差。"},
+  ]},
+{id:"假球案",min:20,max:40,once:true,w:S=>(S.track==="baseball"&&S.rank>=1)?9:0,cond:S=>S.track==="baseball",choice:true,q:"組頭上門，捧著大把鈔票要你「配合」打放水球、簽賭做球…",
+  options:[
+    {t:"收錢放水、配合做球",hint:"大筆黑錢＋身敗名裂風險",eff:S=>{S.flags.fixBall=true;schedule(S,1+rnd(3),"chain_ballBust");return [...inc(S,{happy:2}),...money(S,3000000)];},res:S=>"你收下骯髒錢，就賭檢調查不到。"},
+    {t:"嚴詞拒絕、潔身自愛",hint:"守住運動員尊嚴",eff:S=>{S.flags.clean=true;return inc(S,{chr:3,happy:1});},res:S=>"你把組頭轟出門，球品不容玷汙。"},
+  ]},
+{id:"chain_ballBust",chain:true,once:true,text:"職棒假球案爆發，檢調大動作偵辦，你的名字登上頭條、球迷心碎，你遭聯盟永久禁賽、聲名狼藉。",eff:S=>{S.flags.ballBanned=true;let loss=Math.min(Math.round(Math.max(0,S.money)*0.3),5000000);if(chance(S,0.5)){jailTerm(S,2);S.flags.jailed=true;mile(S,"⛓️","假球案定讞，禁賽入獄、身敗名裂");}else{if(S.track==="baseball")enterTrack(S,"gig",true);mile(S,"📛","假球案纏身，遭聯盟永久禁賽");}return [...inc(S,{happy:-12,chr:-6}),...money(S,-loss)];}},
+{id:"球員引退",min:34,max:44,once:true,w:S=>(S.track==="baseball")?45:0,cond:S=>S.track==="baseball",choice:true,q:"體能與傷勢提醒你，職棒選手的黃金歲月已近尾聲…",
+  options:[
+    {t:"引退轉任教練／球評",hint:"傳承棒球魂",eff:S=>{enterTrack(S,"teach",true);mile(S,"⚾","高掛球鞋，轉任教練／球評");return inc(S,{happy:4});},res:S=>"你把畢生球技傳給下一代。"},
+    {t:"退休開運動用品店",hint:"用名氣創業",eff:S=>{enterTrack(S,"boss",true);mile(S,"🚀","退役後用名氣創業");return inc(S,{happy:4});},res:S=>"你把球場人氣變成生意。"},
+  ]},
+{id:"禁藥風波",min:19,max:40,once:true,w:S=>(S.track==="baseball"&&S.rank>=1&&!S.flags.clean)?9:0,cond:S=>S.track==="baseball",choice:true,q:"為了拚成績、拚旅外身價，有人慫恿你使用「外部物質」增強表現，但藥檢隨時會抽…",
+  options:[
+    {t:"鋌而走險、偷偷用",hint:"成績暴衝但可能被抓包",eff:S=>{let caught=chance(S,0.55);if(caught){S.flags.doping=true;S.money-=1000000;mile(S,"💉","使用外部物質（禁藥）被抓包，藥檢陽性遭禁賽");return inc(S,{con:2,chr:-6,happy:-8});}return inc(S,{con:5,happy:3});},res:S=>S.flags.doping?"藥檢驗出陽性，你被抓包、形象一夕崩塌。":"你僥倖過關，數據亮眼得可疑。"},
+    {t:"堅持乾淨、靠苦練",hint:"問心無愧",eff:S=>{S.flags.clean=true;return inc(S,{con:1,chr:2,happy:1});},res:S=>"你選擇走乾淨的球員之路。"},
+  ]},
+{id:"牛肉麵大聯盟",min:28,max:46,once:true,w:S=>(S.flags.everBaseball&&S.track!=="baseball"&&S.stateOverride!=="服刑中"&&!S.flags.ballBanned)?12:0,cond:S=>S.flags.everBaseball&&S.track!=="baseball"&&S.stateOverride!=="服刑中",choice:true,q:"離開職棒後你開了間牛肉麵店，卻始終沒放下手套、私下苦練不輟。某天海外球探竟遞來一張大聯盟測試合約…",
+  options:[
+    {t:"重拾手套、拚一次大聯盟！",hint:"賣牛肉麵賣回大聯盟的逆襲",eff:S=>{let ok=chance(S,0.45+sk("ath")*0.04);if(ok){enterTrack(S,"baseball",true);S.rank=2;S.flags.overseasBall=true;S.income=25000000;S.money+=20000000;mile(S,"🍜","賣牛肉麵賣回大聯盟，寫下不可思議的逆襲傳奇");return inc(S,{happy:15,chr:5,con:2});}mile(S,"🍜","大聯盟測試落選，回去繼續賣牛肉麵");return inc(S,{happy:-4});},res:S=>S.track==="baseball"?"你把牛肉麵香換成大聯盟的草皮味——奇蹟般重返巔峰！":"測試沒通過，但你的故事已經夠熱血了。"},
+    {t:"人生已翻頁，專心賣麵",hint:"腳踏實地",eff:S=>[...inc(S,{happy:3}),...money(S,300000)],res:S=>"你把對棒球的熱情，熬進每一碗牛肉麵裡。"},
+  ]},
+/* ===== 電競選手：從網咖到世界冠軍（生涯短，傷病與黑幕並存） ===== */
+{id:"電競選拔",min:16,max:24,once:true,w:S=>((S.stats.int>=60||sk("tech")>=2)&&["student","service","gig","tech"].includes(S.track))?11:0,cond:S=>!["esports","baseball"].includes(S.track)&&(S.stats.int>=58||sk("tech")>=2),choice:true,q:"你在網咖／線上排位打到頂尖，職業電競戰隊找你試訓…",
+  options:[
+    {t:"加入電競戰隊當選手！",hint:"反應＋策略之路",eff:S=>{enterTrack(S,"esports",true);mile(S,"🎮","加入電競戰隊，成為職業電競選手");return inc(S,{int:2,happy:6});},res:S=>"你戴上耳機、坐上選手席，鍵盤就是你的戰場。"},
+    {t:"打電動能當飯吃?還是算了",hint:"聽爸媽的話",eff:S=>inc(S,{happy:1}),res:S=>"你關掉遊戲，回到現實。"},
+  ]},
+{id:"電競賽季",min:16,max:34,w:S=>(S.track==="esports"&&S.rank<2&&(S.age-S.trackStart)>=1)?95:0,cond:S=>S.track==="esports"&&S.rank<2,text:"聯賽開打，你苦練操作、研究版本與戰術，拚積分與先發位置。",eff:S=>{const nx=TRACKS.esports.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("tech")*0.05+(S.stats.int-60)*0.006)){S.rank++;S.income=nx.income;mile(S,"🎮","戰績亮眼，晉升為「"+nx.t+"」");return inc(S,{happy:7,int:2});}return inc(S,{happy:-2,con:-1});}},
+{id:"電競世界大賽",min:17,max:34,once:true,w:S=>(S.track==="esports"&&S.rank>=2)?70:0,cond:S=>S.track==="esports"&&S.rank>=2,text:"你率隊征戰世界大賽，全國熬夜看直播為你加油…",eff:S=>{if(chance(S,0.5)){S.flags.esportChamp=true;S.flags.wasSuperstar=true;setEnding(S,"superstar","電競封神的傳奇選手","🏆");S.money+=15000000;mile(S,"🏆","勇奪電競世界冠軍，舉國沸騰");return inc(S,{happy:14,chr:5});}mile(S,"🥈","世界大賽止步四強，雖敗猶榮");return [...inc(S,{happy:4}),...money(S,2000000)];}},
+{id:"直播斗內",min:16,max:38,w:S=>(S.track==="esports"&&S.rank>=1)?14:0,cond:S=>S.track==="esports"&&S.rank>=1,text:"你經營實況台，粉絲抖內、訂閱、業配接不完，收入比賽獎金還多。",eff:S=>[...inc(S,{happy:4}),...money(S,700000)]},
+{id:"加盟GYB",min:16,max:34,once:true,w:S=>(S.track==="esports")?13:0,cond:S=>S.track==="esports",choice:true,q:"人氣爆棚的「GYB 戰隊」找你加盟——老闆是位以言行犀利、開實況台聞名的知名遊戲實況主，粉絲整天在彈幕洗『GYB 讚！』…",
+  options:[
+    {t:"加盟 GYB！一起喊『GYB 讚！』",hint:"流量與話題直接拉滿",eff:S=>{S.flags.gyb=true;S.connections=Math.min(100,S.connections+8);return [...inc(S,{happy:6,chr:2}),...money(S,800000)];},res:S=>"你披上 GYB 隊服，直播間瞬間被滿滿的『GYB 讚！』洗版。"},
+    {t:"婉拒，怕淪為網紅戰隊",hint:"專注純競技",eff:S=>inc(S,{happy:1,int:1}),res:S=>"你選擇低調專注在賽場上。"},
+  ]},
+{id:"GYB老闆開台",min:16,max:36,kind:"minor",w:S=>(S.track==="esports"&&S.flags.gyb)?13:0,cond:S=>S.track==="esports"&&S.flags.gyb,text:"戰隊老闆（那位言行犀利的知名實況主）又在直播開你玩笑、對其他戰隊下戰帖，彈幕瘋狂刷『GYB 讚！』，戰隊聲量再創新高。",eff:S=>[...inc(S,{chr:2,happy:3}),...money(S,300000)]},
+{id:"電競手傷",min:16,max:36,once:true,w:S=>(S.track==="esports"&&S.rank>=1)?10:0,cond:S=>S.track==="esports",choice:true,q:"長年高強度訓練，你的手腕、頸椎出問題（滑鼠手／腕隧道），痛到握不住滑鼠…",
+  options:[
+    {t:"就醫復健、調整訓練量",hint:"保住選手生涯",eff:S=>{S.money-=300000;return inc(S,{con:-3,happy:1});},res:S=>"你學會與傷共處，延長了選手壽命。"},
+    {t:"硬拚不休息",hint:"賭上手腕",eff:S=>inc(S,{con:-7,happy:-3}),res:S=>"你操到手廢，狀態直直落。"},
+  ]},
+{id:"戰隊解散",min:17,max:36,once:true,w:S=>(S.track==="esports"&&S.rank<2)?9:0,cond:S=>S.track==="esports",text:"母隊資金鏈斷裂、贊助商撤資，戰隊無預警解散，你一夕失去舞台。",eff:S=>inc(S,{happy:-6,con:-1})},
+{id:"電競引退",min:26,max:36,once:true,w:S=>(S.track==="esports")?45:0,cond:S=>S.track==="esports",choice:true,q:"電競選手是吃青春飯的行業，反應開始跟不上年輕人了…",
+  options:[
+    {t:"轉當教練／分析師",hint:"留在電競圈",eff:S=>{enterTrack(S,"freelance",true);mile(S,"🎮","選手引退，轉任電競教練／分析師");return inc(S,{happy:4});},res:S=>"你把經驗傳給新生代。"},
+    {t:"全職當遊戲實況主／YouTuber",hint:"把人氣變現",eff:S=>{enterTrack(S,"creator",true);S.rank=1;S.income=TRACKS.creator.ranks[1].income;mile(S,"📱","退役後轉當全職遊戲實況主");return inc(S,{happy:5});},res:S=>"你把選手粉絲帶進直播間。"},
+  ]},
 {id:"衝刺IPO",min:35,max:70,once:true,w:S=>(S.track==="boss"&&!S.flags.ipoPending&&(S.age-S.trackStart)>=5)?42:0,cond:S=>S.track==="boss"&&!S.flags.ipoPending,choice:true,q:"公司經營有成，投資人與承銷商建議你衝刺 IPO 上市…",
   options:[
     {t:"拚上市，做大做強！",hint:"通往企業帝國",eff:S=>{let ok=chance(S,0.4+sk("biz")*0.05+(S.stats.int-60)*0.004);if(ok){S.income=Math.round(S.income*1.5);S.flags.ipoPending=true;schedule(S,3+rnd(3),"chain_bizPeak");return inc(S,{happy:8,chr:3});}return [...inc(S,{happy:-6,con:-1}),...money(S,-Math.min(Math.round(S.money*0.3),60000000))];},res:S=>"這一搏，成王敗寇。"},
@@ -1399,6 +1488,16 @@ const EV=[
   options:[
     {t:"當場爆氣、摔道具走人",hint:"上熱搜但被貼標籤",eff:S=>{S.flags.soreLoser=true;mile(S,"😤","綜藝錄影當場爆氣走人，被冠上『輸不起』的封號");return [...inc(S,{chr:-4,happy:-5}),...money(S,-200000)];},res:S=>"畫面被瘋傳、上了熱搜第一——從此「輸不起」的封號如影隨形。"},
     {t:"自嘲帶過、笑著認輸",hint:"高情商圈粉",eff:S=>[...inc(S,{chr:3,happy:2}),...money(S,150000)],res:S=>"你大方自嘲，反而被讚高情商，路人緣大增。"},
+  ]},
+{id:"演出出包",min:18,max:45,once:true,w:S=>(["star","creator"].includes(S.track)&&S.rank>=1)?12:0,cond:S=>["star","creator"].includes(S.track),choice:true,q:"一場商演進行到一半，突發狀況打斷了你精心安排的橋段（音響凸槌、有觀眾上台起鬨），全場氣氛瞬間尷尬…",
+  options:[
+    {t:"敬業救場、隨機應變化解",hint:"展現專業、圈粉佳話",eff:S=>{S.flags.stageRush=true;S.connections=Math.min(100,S.connections+6);mile(S,"🎤","演出遇突發狀況，你敬業救場、成為佳話");return [...inc(S,{chr:5,happy:4}),...money(S,200000)];},res:S=>"你臨場反應絕佳，笑著把場子救了回來，路人緣暴增。"},
+    {t:"當場擺臉色、鬧脾氣",hint:"耍大牌，事後恐炎上",eff:S=>{S.flags.stageRush=true;S.flags.starDiva=true;schedule(S,1,"chain_stageBacklash");mile(S,"😑","演出被打斷當場擺臉色，畫面被拍下");return inc(S,{happy:-2,chr:-2});},res:S=>"你擺明了不爽，尷尬全被錄影存證、上傳網路。"},
+  ]},
+{id:"chain_stageBacklash",chain:true,once:true,choice:true,q:"你擺臉色的影片瘋傳，網友批你耍大牌、不敬業，你發文回應卻越描越黑，主辦與品牌開始跟你切割…",
+  options:[
+    {t:"誠懇道歉、扛下責任",hint:"止血、形象小傷",eff:S=>inc(S,{chr:-3,happy:-4}),res:S=>"你放下身段道歉，風波慢慢平息，但敬業口碑已有裂痕。"},
+    {t:"硬拗甩鍋、死不認錯",hint:"火上加油",eff:S=>{S.flags.boycotted=true;let loss=Math.min(Math.round(Math.max(0,S.money)*0.15),3000000);mile(S,"📛","耍大牌風波延燒，商演與代言檔期全被撤、事業重創");return [...inc(S,{chr:-7,happy:-8}),...money(S,-loss)];},res:S=>"你越描越黑、遭全面抵制，商演與代言檔期一個個被撤。"},
   ]},
 {id:"天使投資",min:30,max:62,once:true,w:S=>(sk("biz")>=3&&S.money>5000000)?8:0,cond:S=>S.money>3000000,choice:true,q:"學弟的新創找你當天使投資人，估值便宜、但十有八九會歸零…",
   options:[
@@ -2016,10 +2115,49 @@ const EV=[
     if(S.stats.con<42)o.push({t:"體位不合、驗退免役",hint:"免當兵",eff:S=>{S.flags.exempt=true;S.flags.served=true;mile(S,"🎫","體位不合，免服兵役");return inc(S,{happy:4});},res:S=>"你逃過震撼教育（也錯過一段回憶）。"});
     o.push({t:"乖乖入伍、聽天由命抽籤",hint:"看運氣",eff:S=>{S.flags.served=true;S.flags.conscript=true;let d=[];if(S.rel==="交往中"&&chance(S,0.35)){S.rel="單身";mile(S,"💔","服役期間收到兵變分手信");d.push(...inc(S,{happy:-6}));}if(chance(S,0.45)){mile(S,"🪖","抽到涼缺，爽兵一枚");return [...d,...inc(S,{con:2,happy:2,chr:1})];}mile(S,"🪖","抽中金馬獎／海龍，操到脫層皮");schedule(S,1,"chain_army");return [...d,...inc(S,{con:4,happy:-3})];},res:S=>"入伍那天，家人在門口紅了眼眶。"});
     if(S.connections>=40||S.money>2000000)o.push({t:"動用關係／花錢喬涼缺",hint:"人脈或鈔能力",eff:S=>{S.flags.served=true;S.flags.conscript=true;S.money-=Math.min(300000,Math.max(0,S.money));mile(S,"🪖","靠關係喬到涼缺爽當兵");return inc(S,{happy:3});},res:S=>"有關係，就沒關係。"});
+    if((S.fam&&S.fam.net)||S.money>3000000)o.push({t:"花大錢收買體檢人員、偽造免役證明",hint:"鈔能力免役（但東窗事發會很慘）",eff:S=>{S.flags.exempt=true;S.flags.served=true;S.flags.fakeExempt=true;S.money-=Math.min(Math.max(1500000,Math.round(Math.max(0,S.money)*0.15)),4000000);schedule(S,2+rnd(7),"chain_draftFraud");mile(S,"🕵️","花錢買通體檢、偽造免役證明");return inc(S,{happy:2});},res:S=>"驗退單到手，你連新訓中心的門都沒踏進過——就賭沒人翻舊帳。"});
     return o;
   }},
+{id:"chain_draftFraud",chain:true,once:true,choice:true,q:"檢調偵辦一起『免役舞弊集團』，當年你偽造免役證明的往事被翻了出來，你被列為被告…",
+  options:[
+    {t:"砸錢請律師、全力擺平",hint:"再燒一筆消災（未必成功）",eff:S=>{let esc=chance(S,0.5);S.money-=Math.min(Math.max(1000000,Math.round(Math.max(0,S.money)*0.2)),5000000);if(esc)return inc(S,{happy:-3,chr:-2});jailTerm(S,1);S.flags.jailed=true;mile(S,"⛓️","免役舞弊遭起訴，判刑入獄、身敗名裂");return inc(S,{happy:-8,chr:-4});},res:S=>S.stateOverride==="服刑中"?"這回錢也擺不平，你進了看守所。":"你再砸一筆，勉強壓下風波。"},
+    {t:"認罪協商、繳回不法所得",hint:"高額罰金了事、留下汙點",eff:S=>{S.money-=Math.min(Math.max(800000,Math.round(Math.max(0,S.money)*0.15)),4000000);mile(S,"📛","免役舞弊認罪，繳交高額罰金、名譽掃地");return inc(S,{happy:-5,chr:-3});},res:S=>"你認了罪、繳了錢，這輩子貼上『逃兵富少』的標籤。"},
+  ]},
 {id:"chain_army",chain:true,min:0,max:120,text:"部隊裡學長學弟制、站夜哨、跑五千、莒光日、五百障礙、被學長電——你在鋼鐵般的日子裡磨出硬漢心志，也交到一輩子的兵役兄弟。",eff:S=>inc(S,{con:3,happy:-1,chr:1})},
 {id:"當兵梗",min:19,max:75,kind:"minor",w:S=>S.flags.conscript?7:0,text:"你又想起當兵的日子：數饅頭、擦皮鞋、刺槍術、放假前一晚興奮到睡不著——當過兵的都懂。",eff:S=>inc(S,{happy:1})},
+/* ===== 教召（後備軍人）：機率被召回，也可能撞上出國計畫 ===== */
+{id:"教召",min:28,max:50,w:S=>(S.flags.conscript&&!S.flags.exempt&&S.stateOverride!=="服刑中"&&S.stateOverride!=="海外流亡")?9:0,cond:S=>S.flags.conscript&&!S.flags.exempt,text:"後備軍人教育召集令來了！你被召回營區 14 天，重溫打靶、行軍、擦槍的日子——老婆碎念、老闆臉臭，你也只能摸摸鼻子報到。",eff:S=>{S.flags.recalledArmy=true;return inc(S,{con:2,happy:-2});}},
+{id:"教召撞出國",min:28,max:44,once:true,w:S=>(S.flags.conscript&&!S.flags.exempt&&S.stateOverride!=="服刑中")?7:0,cond:S=>S.flags.conscript&&!S.flags.exempt,choice:true,q:"你早就訂好機票、安排出國（旅遊／出差／打工度假），臨行前竟收到一紙教召令，時間硬生生撞在一起…",
+  options:[
+    {t:"乖乖退票、報到教召",hint:"守法，但機票與計畫全泡湯",eff:S=>{S.money-=Math.min(80000,Math.max(0,S.money));return inc(S,{happy:-5,con:1});},res:S=>"你含淚退掉機票、剃了頭走進營區。"},
+    {t:"照樣出國、當作沒收到",hint:"爽一時——但這是『妨害兵役』",eff:S=>{S.flags.draftEvade=true;if(chance(S,0.7))schedule(S,1,"chain_draftEvade");else S.flags.draftLucky=true;return inc(S,{happy:5});},res:S=>S.flags.draftLucky?"你關機出國玩得很盡興，回國竟也沒事——好險。":"你關機出國玩得很開心——但兵役單位已經盯上你了。"},
+  ]},
+{id:"chain_draftEvade",chain:true,once:true,choice:true,q:"你逃避教召的事被查獲，依《妨害兵役治罪條例》移送法辦，你被限制出境、面臨牢獄之災…",
+  options:[
+    {t:"回國投案、認罪服刑",hint:"面對它、了結它",eff:S=>{jailTerm(S,1);S.flags.jailed=true;mile(S,"⛓️","逃避教召被判刑，蹲了苦牢");return inc(S,{happy:-8,chr:-3});},res:S=>"你走進看守所，為一時的逃避付出代價。"},
+    {t:"乾脆滯留海外、當通緝犯跑路",hint:"從此有家歸不得",eff:S=>{S.flags.fugitive=true;S.stateOverride="海外流亡";S.track="none";S.rank=0;S.income=250000;mile(S,"🛫","逃避兵役滯留海外，成了跑路通緝犯");return inc(S,{happy:-4,con:-1});},res:S=>"你成了回不了家的通緝犯，往後的人生只能在異鄉飄蕩。"},
+  ]},
+/* ===== 逃兵通緝犯：海外流亡的完整故事線（可自首／大赦回國、落地生根，也可能客死異鄉） ===== */
+{id:"海外打黑工",min:20,max:120,kind:"minor",w:S=>S.flags.fugitive?14:0,cond:S=>S.flags.fugitive,text:"沒有身分的你只能打黑工、洗盤子、綁鋼筋，領現金、看老闆臉色，隨時怕被抓。",eff:S=>[...inc(S,{happy:-2,con:-1}),...money(S,120000)]},
+{id:"海外躲藏",min:20,max:120,kind:"minor",w:S=>S.flags.fugitive?12:0,cond:S=>S.flags.fugitive,text:"聽說台灣發了通緝、還跟國際刑警合作，你嚇得不敢用真名、不敢露臉，天天提心吊膽。",eff:S=>inc(S,{happy:-3,con:-1})},
+{id:"逃兵思鄉",min:20,max:120,kind:"minor",w:S=>S.flags.fugitive?12:0,cond:S=>S.flags.fugitive,text:"逢年過節，你在異鄉聽著鄉音的歌、看著家人的照片，想家想到掉淚，卻有家歸不得。",eff:S=>inc(S,{happy:-4})},
+{id:"流亡淪落",min:20,max:120,once:true,w:S=>(S.flags.fugitive&&!S.flags.gang)?9:0,cond:S=>S.flags.fugitive&&!S.flags.gang,choice:true,q:"人生地不熟又沒身分，同鄉的『大哥』找你做點『來錢快』的事…",
+  options:[
+    {t:"為了活下去、鋌而走險",hint:"越陷越深",eff:S=>{S.flags.gang=true;return [...inc(S,{happy:-2,chr:2}),...money(S,600000)];},res:S=>"你在異鄉的黑暗角落討生活。"},
+    {t:"再苦也守住底線",hint:"清白但更難熬",eff:S=>inc(S,{happy:-3,con:-1}),res:S=>"你咬牙撐著，不願再犯錯。"},
+  ]},
+{id:"異鄉落地生根",min:20,max:120,once:true,w:S=>(S.flags.fugitive&&!S.flags.settledAbroad)?7:0,cond:S=>S.flags.fugitive,choice:true,q:"流亡多年，你用假身分在異鄉站穩了腳，甚至遇上願意相守的人…",
+  options:[
+    {t:"隱姓埋名、就此落地生根",hint:"回不了家，但有了新生活",eff:S=>{S.flags.settledAbroad=true;if(S.rel==="單身")S.rel="已婚";S.income=Math.max(S.income,450000);mile(S,"🏝️","以假身分在異鄉落地生根、成家立業");return inc(S,{happy:8});},res:S=>"你把台灣藏進心底，在異鄉展開新的人生。"},
+    {t:"心繫故鄉、不願安定",hint:"總有一天要回家",eff:S=>inc(S,{happy:-2}),res:S=>"你始終覺得自己是個過客。"},
+  ]},
+{id:"偷渡自首",min:20,max:120,once:true,w:S=>S.flags.fugitive?8:0,cond:S=>S.flags.fugitive,choice:true,q:"漂泊多年，你再也受不了異鄉的孤單，動了偷渡回國、投案自首的念頭…",
+  options:[
+    {t:"偷渡回台、投案面對",hint:"服完刑就自由了",eff:S=>{S.flags.fugitive=false;S.stateOverride=null;jailTerm(S,1);S.flags.jailed=true;mile(S,"🛬","漂泊多年後偷渡回國、投案自首");return inc(S,{happy:2,con:-1});},res:S=>"你踏上熟悉的土地、走進看守所，卻莫名鬆了一口氣。"},
+    {t:"再撐撐、繼續流亡",hint:"自由但無根",eff:S=>inc(S,{happy:-2}),res:S=>"你又把回家的念頭吞了回去。"},
+  ]},
+{id:"逃兵大赦",min:20,max:120,once:true,w:S=>S.flags.fugitive?6:0,cond:S=>S.flags.fugitive,text:"好消息傳來：兵役法規修正、追訴時效已過（又逢國家大赦），你的通緝令撤銷了——你終於可以光明正大回家！",eff:S=>{S.flags.fugitive=false;S.flags.amnesty=true;S.stateOverride=null;enterTrack(S,"gig",true);mile(S,"🕊️","通緝時效已過／獲大赦，結束流亡、回國重新生活");return inc(S,{happy:12});}},
+{id:"客死異鄉",min:45,max:120,once:true,w:S=>S.flags.fugitive?7:0,cond:S=>S.flags.fugitive,text:"多年流亡、缺醫少藥又孤苦無依，你的身體終於撐不住了…",eff:S=>{if(chance(S,0.4)){killLater(S,"你在異鄉貧病交迫，孤獨地客死他鄉，無人送終。");return inc(S,{con:-8,happy:-4});}return inc(S,{con:-4,happy:-3});}},
 
 /* ===== PTT／Dcard 鄉民文化 ===== */
 {id:"PTT爆紅",min:15,max:62,kind:"minor",w:9,text:"你在 PTT／Dcard 發的一篇文被推爆、洗上熱門，嘗到當「鄉民之神」的快感。",eff:S=>inc(S,{happy:3,chr:1})},
