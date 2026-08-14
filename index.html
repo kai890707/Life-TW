@@ -1699,7 +1699,7 @@ const EV=[
 {id:"sk_talk",min:18,max:72,w:S=>(sk("talk")>=3&&!downAndOut(S))?14:0,text:"你口若懸河，當上業務冠軍／社區里長／活動主持人。",eff:S=>[...inc(S,{chr:2,happy:2}),...money(S,90000)]},
 {id:"sk_ath",min:13,max:45,once:true,w:S=>sk("ath")>=3?18:0,choice:true,q:"你體育超強，教練找你進校隊拚國手…",
   options:[
-    {t:"拚職業／國手夢",hint:"體質＋，但可能受傷",eff:S=>{let ok=chance(S,0.5);return ok?[...inc(S,{con:6,chr:4,happy:5}),...money(S,150000)]:inc(S,{con:-6,happy:-3});},res:S=>S.stats.con>60?"你在賽場上發光發熱！":"一次重傷，運動夢碎。"},
+    {t:"拚職業／國手夢",hint:"體質＋，走上運動員之路（可能受傷）",eff:S=>{let ok=chance(S,0.5);if(ok){S.flags.natTeam=true;return [...inc(S,{con:6,chr:4,happy:5}),...money(S,150000)];}return inc(S,{con:-6,happy:-3});},res:S=>S.flags.natTeam?"你入選國家代表隊，在賽場上發光發熱！":"一次重傷，運動夢碎。"},
     {t:"運動當興趣就好",hint:"健康＋",eff:S=>inc(S,{con:4,happy:2}),res:S=>"你把運動當終身興趣。"},
   ]},
 {id:"sk_street",min:18,max:55,w:S=>(sk("street")>=2&&!S.flags.homeless)?13:0,text:"道上有人找你圍事／喬事情，你賺了筆來路不明的錢。",eff:S=>{let risk=chance(S,0.3);return risk?[...inc(S,{con:-5,happy:-3}),...money(S,150000)]:[...inc(S,{chr:2}),...money(S,120000)];}},
@@ -1837,7 +1837,7 @@ const EV=[
 {id:"被霸凌",min:8,max:16,w:S=>(S.stats.chr<45||S.stats.con<45)?12:5,choice:true,q:"你在學校被同學霸凌、排擠…",
   options:S=>{
     const o=[];
-    if(S.stats.con>=55||sk("street")>=1)o.push({t:"反擊回去",hint:"體魄／江湖",eff:S=>{let win=S.stats.con>=55||sk("street")>=1;return inc(S,win?{chr:3,happy:3,con:1}:{con:-3,happy:-2});},res:S=>"你不再忍讓。"});
+    if(S.stats.con>=55||sk("street")>=1)o.push({t:"反擊回去",hint:"賭一把：贏了揚眉吐氣、輸了更慘",eff:S=>{if(chance(S,0.5+(S.stats.con-55)*0.012+sk("street")*0.12)){S._fightWon=true;return inc(S,{chr:3,happy:3,con:1});}S._fightWon=false;S.skills.street=Math.min(skCap("street"),skXp("street")+1);return inc(S,{con:-4,happy:-4,chr:-1});},res:S=>S._fightWon?"你狠狠回敬回去，從此沒人敢再惹你。":"你寡不敵眾、被打得更慘，卻也在挨打中變得更硬。"});
     if(S.stats.int>=55)o.push({t:"告訴師長、蒐證處理",hint:"智力",eff:S=>inc(S,{happy:2,int:1}),res:S=>"大人介入了。"});
     o.push({t:"默默承受",hint:"忍",eff:S=>inc(S,{happy:-6,chr:-1}),res:S=>"陰影留在心裡很久。"});
     return o;
@@ -1984,7 +1984,7 @@ const EV=[
 /* ===== 個人榮譽（務必與故事線相關，不憑空出現；由既有成就觸發） ===== */
 {id:"時代雜誌",min:30,max:88,once:true,w:S=>(S.flags.wasPresident||S.flags.wasSuperstar||(S.ending&&S.ending.key==="nobel")||S.flags.tycoon||S.flags.olympian||S.flags.twRichest)?30:0,cond:S=>S.flags.wasPresident||S.flags.wasSuperstar||(S.ending&&S.ending.key==="nobel")||S.flags.tycoon||S.flags.olympian||S.flags.twRichest,text:"你的成就登上《時刻雜誌》年度風雲人物封面，成為全球矚目的焦點。",eff:S=>{S.flags.timePerson=true;mile(S,"📰","登上《時刻雜誌》年度風雲人物");return inc(S,{happy:8,chr:3});}},
 {id:"金馬金曲",min:20,max:72,once:true,w:S=>((S.track==="star"||S.track==="creator")&&S.rank>=2)?26:0,cond:S=>(S.track==="star"||S.track==="creator")&&S.rank>=2,text:"你抱回了金馬／金曲／金鐘獎座，站上台灣演藝圈的最高殿堂。",eff:S=>{S.flags.goldAward=true;mile(S,"🏆","榮獲金馬／金曲獎，演藝生涯登頂");return inc(S,{happy:10,chr:4});}},
-{id:"奧運摘金",min:18,max:36,once:true,w:S=>(sk("ath")>=4&&S.stats.con>=78)?30:0,cond:S=>sk("ath")>=4&&S.stats.con>=72,text:"你披上國家隊戰袍，在奧運殿堂為台灣奪下一面金牌，全國為你歡騰。",eff:S=>{S.flags.olympian=true;mile(S,"🥇","奧運奪金，成為台灣之光");return [...inc(S,{happy:14,chr:5,con:2}),...money(S,3000000)];}},
+{id:"奧運摘金",min:18,max:40,once:true,w:S=>((S.flags.natTeam||S.track==="baseball")&&S.stats.con>=78)?30:0,cond:S=>(S.flags.natTeam||S.track==="baseball")&&S.stats.con>=72,text:"你披上國家隊戰袍，在奧運殿堂為台灣奪下一面金牌，全國為你歡騰。",eff:S=>{S.flags.olympian=true;mile(S,"🥇","奧運奪金，成為台灣之光");return [...inc(S,{happy:14,chr:5,con:2}),...money(S,3000000)];}},
 {id:"chain_lovechild",chain:true,min:0,max:120,choice:true,q:"一個年輕人找上門，自稱是你當年一夜情／舊情人留下的孩子——你的私生子女…",
   options:[
     {t:"認了，接納這個孩子",hint:"多個牽掛",eff:S=>{S.children.push({born:S.age-20,invest:0,resolved:true,outcome:chance(S,0.5)?"good":"normal"});return [...inc(S,{happy:2}),...money(S,-500000)];},res:S=>"你多了個沒養過的孩子。"},
@@ -2356,7 +2356,7 @@ const EV=[
 {id:"醫療糾紛",min:28,max:65,w:S=>(S.track==="pro")?12:0,cond:S=>S.track==="pro",choice:true,q:"一起醫療／訴訟結果不如預期，對方家屬揚言提告、上媒體爆料…",
   options:[
     {t:"和解賠償、快速止血",hint:"花錢消災",eff:S=>[...money(S,-Math.min(Math.round(Math.max(0,S.money)*0.15),3000000)),...inc(S,{happy:-3})],res:S=>"你賠錢了事，保住執照。"},
-    {t:"上法院力爭清白",hint:"賭贏名聲、賭輸重傷",eff:S=>{if(chance(S,0.55))return inc(S,{chr:2,happy:2});return [...money(S,-2000000),...inc(S,{chr:-3,happy:-5})];},res:S=>"官司纏身好幾年。"},
+    {t:"上法院力爭清白",hint:"賭贏名聲、賭輸重傷",eff:S=>{if(chance(S,0.55)){S._suitWon=true;return [...inc(S,{chr:3,happy:-3,con:-1}),...money(S,-600000)];}S._suitWon=false;return [...money(S,-2000000),...inc(S,{chr:-3,happy:-5})];},res:S=>S._suitWon?"官司纏訟多年、燒錢又勞神，最終你勝訴、洗刷了冤屈。":"這場官司你輸了——賠上大筆金錢與名聲。"},
   ]},
 {id:"開業當老闆",min:32,max:60,once:true,w:S=>(S.track==="pro"&&S.money>3000000)?12:0,cond:S=>S.track==="pro",choice:true,q:"醫美／法律市場火熱，你考慮自己開間診所／事務所…",
   options:[
