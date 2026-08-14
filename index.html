@@ -509,9 +509,14 @@ const TRACKS={
     {t:"中型頻道網紅",income:1700000,y:3,req:{chr:56}},
     {t:"百萬訂閱創作者",income:7500000,y:7,req:{chr:70,int:52}},
   ]},
+  cheer:{nm:"職業啦啦隊",ranks:[
+    {t:"應援啦啦隊員",income:460000},
+    {t:"人氣看板女神",income:1500000,y:3,req:{chr:70}},
+    {t:"應援天花板／隊長",income:4500000,y:7,req:{chr:82}},
+  ]},
 };
-const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6};
-const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱"};
+const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6};
+const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀"};
 /* 出社會：職涯與「主專長＋學歷」綁定，大部分人順著專長走，少數斜槓 */
 function topSkill(S){let best=null,bx=SK_THRESH[0]-1;for(const sd of SKILLS){const x=skXp(sd.k);if(x>bx){bx=x;best=sd;}}return best;}
 function careerReady(S){
@@ -562,7 +567,7 @@ function careerOptions(S){
   if(out.length<2)push("service");
   return out.slice(0,3);
 }
-function trackName(){ if(S.stateOverride) return S.stateOverride; const tr=TRACKS[S.track]; return tr?tr.ranks[S.rank].t:"無業"; }
+function trackName(){ if(S.stateOverride) return S.stateOverride; const tr=TRACKS[S.track]; return tr?(tr.ranks[S.rank]||tr.ranks[0]).t:"無業"; }
 function enterTrack(S,id,silent){
   S.track=id; S.rank=0; S.trackStart=S.age; S.income=TRACKS[id].ranks[0].income; S.stateOverride=null;
   S.flags.left=true; S.flags.careerStarted=true;  // 進入職場＝離開學生身分，升學事件不再觸發
@@ -570,10 +575,10 @@ function enterTrack(S,id,silent){
   if(!silent) mile(S,"💼","出社會，成為「"+TRACKS[id].ranks[0].t+"」");
 }
 // 各職涯對應的「本職專長」——把骰子練進本職專長，升遷更快、也能補足能力門檻
-const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street"};
+const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art"};
 function tryPromote(S){
   if(S.stateOverride) return;
-  if(["politics","star","creator"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體靠爆紅，不是年資升遷
+  if(["politics","star","creator","cheer"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體／啦啦隊靠人氣，不是年資升遷
   const tr=TRACKS[S.track]; if(!tr) return;
   const nx=tr.ranks[S.rank+1]; if(!nx) return;
   const tenure=S.age-S.trackStart;
@@ -652,6 +657,7 @@ const ACHIEVEMENTS=[
   {id:"scholar",icon:"🧠",nm:"學霸傳說",c:S=>S.peak.int>=98&&sk("acad")>=4},
   {id:"beauty",icon:"🌸",nm:"顏值天花板",c:S=>S.peak.chr>=100&&(sk("art")>=2||S.flags.starface)},
   {id:"longlive",icon:"🧓",nm:"人瑞級長壽",c:S=>S.age>=98},
+  {id:"supercent",icon:"🕯️",nm:"破紀錄超級人瑞",c:S=>S.age>=115},
   {id:"youngdie",icon:"💀",nm:"英年早逝",c:S=>S.age<30},
   {id:"married",icon:"💍",nm:"白頭偕老",c:S=>S.rel==="已婚"&&S.age>=60},
   {id:"taida",icon:"👨‍🎓",nm:"教出台大生",c:S=>S.flags.taida},
@@ -677,6 +683,15 @@ const ACHIEVEMENTS=[
   {id:"polStar",icon:"📣",nm:"聲量政治明星",c:S=>S.flags.polStar},
   {id:"rekt",icon:"🥬",nm:"幣圈韭菜",c:S=>S.flags.rekt},
   {id:"cryptoRich",icon:"🪙",nm:"幣圈翻身",c:S=>S.flags.cryptoRich},
+  {id:"cheer",icon:"🎀",nm:"應援女神",c:S=>S.peakTrack==="cheer"},
+  {id:"cheerViral",icon:"📣",nm:"應援爆紅",c:S=>S.flags.cheerStar},
+  {id:"khMayor",icon:"🌊",nm:"高雄市長",c:S=>S.flags.khMayor},
+  {id:"recalled",icon:"📛",nm:"被罷免下台",c:S=>S.flags.recalled},
+  {id:"returnMyCow",icon:"🐮",nm:"還我牛",c:S=>S.flags.returnMyCow},
+  {id:"boxBeaten",icon:"📦",nm:"開箱被爆打",c:S=>S.flags.boxBeaten},
+  {id:"deathShake",icon:"🤝",nm:"死亡之握受害者",c:S=>S.flags.deathShake},
+  {id:"brawl",icon:"🥊",nm:"立院全武行",c:S=>S.flags.brawl},
+  {id:"soreLoser",icon:"😤",nm:"輸不起",c:S=>S.flags.soreLoser},
 ];
 function loadAchv(){try{return new Set(JSON.parse(localStorage.getItem("twlife_achv")||"[]"));}catch(e){return new Set();}}
 function saveAchv(set){try{localStorage.setItem("twlife_achv",JSON.stringify([...set]));}catch(e){}}
@@ -850,7 +865,7 @@ function checkWealthMile(S){
   if(!S.wealthMile.spendthrift&&S.peak.money>=30000000&&nw<1000000){S.wealthMile.spendthrift=1;S.flags.spendthrift=true;mile(S,"💸","敗光千萬家產，淪為敗家子");}
 }
 /* ===== 年齡里程碑 ===== */
-const AGE_MILE=[[30,"🎂","而立之年"],[40,"🎂","不惑之年"],[50,"🎂","知天命"],[60,"🎂","耳順之年"],[70,"🎋","古稀之年"],[80,"🎋","傘壽高齡"],[90,"🎋","九十鮐背、登上地方新聞"],[100,"🎉","百歲人瑞、鄰里傳頌"]];
+const AGE_MILE=[[30,"🎂","而立之年"],[40,"🎂","不惑之年"],[50,"🎂","知天命"],[60,"🎂","耳順之年"],[70,"🎋","古稀之年"],[80,"🎋","傘壽高齡"],[90,"🎋","九十鮐背、登上地方新聞"],[100,"🎉","百歲人瑞、鄰里傳頌"],[110,"🎊","破百拾歲、成了地方活歷史"],[120,"🏅","逼近台灣最高齡紀錄的超級人瑞"]];
 function checkAgeMile(S){
   if(!S.ageMile)S.ageMile={};
   for(const [a,icon,t] of AGE_MILE){ if(!S.ageMile[a]&&S.age>=a){S.ageMile[a]=1;mile(S,icon,t);} }
@@ -1289,6 +1304,18 @@ const EV=[
     {t:"角逐大位！",hint:"問鼎權力頂峰",eff:S=>{let win=chance(S,0.2+(S.stats.chr-70)*0.01+(S.stats.int-60)*0.005);if(win){S.flags.wasPresident=true;setEnding(S,"president","登上權力頂峰的一生","🇹🇼");mile(S,"🇹🇼","當選中華民國總統！");return [...inc(S,{happy:16,chr:6}),...money(S,3000000)];}mile(S,"🗳️","總統敗選，回歸立院");return inc(S,{happy:-6});},res:S=>S.ending&&S.ending.key==="president"?"萬民擁戴，你入主總統府！":"雖敗猶榮。"},
     {t:"當立委就好",hint:"見好就收",eff:S=>inc(S,{happy:2}),res:S=>"你守住立委崗位。"},
   ]},
+/* ===== 高雄市長：一句「高雄發大財」的政治豪賭 ===== */
+{id:"選高雄市長",min:40,max:64,once:true,w:S=>(S.track==="politics"&&S.rank>=1&&!S.flags.mayor)?(S.region&&S.region.id==="khh"?120:60):0,cond:S=>S.track==="politics"&&S.rank>=1&&!S.flags.mayor,choice:true,q:"南方吹起一股旋風，黨內徵召你投入高雄市長選戰！",
+  options:[
+    {t:"參選高雄市長！",hint:"風向來了、拚一波",eff:S=>{let win=chance(S,0.34+(S.stats.chr-62)*0.008+sk("talk")*0.03);S.money-=1500000;if(win){S.flags.mayor=true;S.flags.khMayor=true;S._preMayorIncome=S.income;S.income=3000000;schedule(S,1+rnd(2),"chain_bigFortune");mile(S,"🌊","翻轉南方，當選高雄市長！");return [...inc(S,{happy:12,chr:4}),...money(S,1000000)];}mile(S,"📉","高雄市長落選，鎩羽而歸");return inc(S,{happy:-7});},res:S=>S.flags.khMayor?"你披上彩帶入主高雄市政府！":"這場硬仗你輸了。"},
+    {t:"守住立院崗位",hint:"不冒這個險",eff:S=>inc(S,{happy:1}),res:S=>"你選擇留在原本的位子。"},
+  ]},
+{id:"chain_bigFortune",chain:true,once:true,choice:true,q:"上任演說，鎂光燈全打在你身上。你張開雙手，要不要對著滿場市民大喊那句招牌口號？",
+  options:[
+    {t:"高聲大喊「高雄發大財！」",hint:"聲量爆棚，但支票開得出來嗎",eff:S=>{S.flags.bigFortune=true;mile(S,"💸","上任高喊「高雄發大財」，紅極一時");schedule(S,2+rnd(2),"chain_recallVote");return inc(S,{chr:3,happy:6});},res:S=>"全場沸騰、口號洗版全國——但市民開始等著看你怎麼兌現。"},
+    {t:"務實談政策、不喊口號",hint:"低調穩健",eff:S=>{S.flags.pragMayor=true;return inc(S,{happy:2,int:1});},res:S=>"你選擇少喊口號、多做事。"},
+  ]},
+{id:"chain_recallVote",chain:true,once:true,text:"「發大財」喊了兩年還是沒發財，市民從狂熱轉為失望，覺得被空頭支票唬弄，罷免連署遍地開花。",eff:S=>{S.flags.disliked=true;let recalled=chance(S,0.6);if(recalled){S.flags.recalled=true;S.flags.mayor=false;S.income=S._preMayorIncome||S.income*0.3;mile(S,"📛","「發大財」跳票，成為史上首位被罷免的市長");return inc(S,{happy:-12,chr:-6});}mile(S,"📉","民調崩盤、被貼上『落跑』標籤，勉強撐完任期");return inc(S,{happy:-8,chr:-4});}},
 /* ===== 民代的日常：跑攤、選民服務、賄選、質詢、緋聞 ===== */
 {id:"跑攤",min:28,max:78,kind:"minor",w:S=>(S.track==="politics")?18:0,cond:S=>S.track==="politics",text:"婚喪喜慶、廟會剪綵、里民烤肉，你一天跑十攤、乾杯到胃翻——民代的日常。",eff:S=>{S.connections=Math.min(100,S.connections+2);if(S.stats.con<38&&chance(S,0.25)){S.health=clamp((S.health||50)-12,0,100);mile(S,"🍺","長年跑攤應酬，喝出肝硬化");return inc(S,{con:-4,happy:-3});}return inc(S,{con:-3,chr:1,happy:-1});}},
 {id:"選民服務",min:28,max:82,kind:"minor",w:S=>(S.track==="politics")?16:0,cond:S=>S.track==="politics",text:S=>pick(["深夜接到選民電話，說路燈壞了要你「馬上處理」。","選民拜託你喬紅單、關說小孩讀書，你笑著打哈哈。","服務處招牌被對手陣營潑漆，你連夜換新的。","你辦市民一日遊、發放老人共餐便當，選民揪甘心。"]),eff:S=>{S.connections=Math.min(100,S.connections+3);return inc(S,{happy:1,chr:1});}},
@@ -1300,13 +1327,20 @@ const EV=[
 {id:"chain_briberyBust",chain:true,once:true,choice:true,q:"檢調查賄選！走路工名冊被起底，你被依《選罷法》起訴，恐當選無效…",
   options:[
     {t:"花錢請律師、切割樁腳",hint:"燒錢脫身（未必成功）",eff:S=>{let esc=chance(S,0.45+S.stats.int*0.003);S.money-=Math.min(Math.max(1500000,Math.round(Math.max(0,S.money)*0.3)),8000000);if(esc){S.flags.voteBuy=false;return inc(S,{happy:-4,chr:-2});}S.flags.corruptJail=true;jailTerm(S,2);mile(S,"⛓️","賄選案定讞，當選無效、鋃鐺入獄");return inc(S,{happy:-10,chr:-4});},res:S=>S.stateOverride==="服刑中"?"你走進看守所，政治生涯畫下句點。":"你砸錢切割，驚險過關。"},
-    {t:"認了，退出政壇",hint:"當選無效、退場",eff:S=>{S.flags.voteBuy=false;if(S.track==="politics"){S.track="none";S.income=Math.round((S.income||0)*0.1);}mile(S,"📉","賄選案坦承，黯然退出政壇");return inc(S,{happy:-8,chr:-2});},res:S=>"你鞠躬道歉、退出政壇。"},
+    {t:"認了，退出政壇",hint:"當選無效、退場",eff:S=>{S.flags.voteBuy=false;if(S.track==="politics"){S.track="none";S.rank=0;S.income=Math.round((S.income||0)*0.1);}mile(S,"📉","賄選案坦承，黯然退出政壇");return inc(S,{happy:-8,chr:-2});},res:S=>"你鞠躬道歉、退出政壇。"},
   ]},
 {id:"質詢爆紅",min:30,max:72,once:true,w:S=>(S.track==="politics"&&S.rank>=1)?14:0,cond:S=>S.track==="politics"&&S.rank>=1,text:"你一段犀利質詢／金句被剪成短影音瘋傳，聲量暴衝，全國都認得你。",eff:S=>{S.connections=Math.min(100,S.connections+8);S.flags.polStar=true;return inc(S,{chr:6,happy:6});}},
 {id:"政治緋聞",min:32,max:70,once:true,w:S=>(S.track==="politics"&&S.rank>=1)?9:0,cond:S=>S.track==="politics"&&S.rank>=1,choice:true,q:"週刊爆你的緋聞／私德爭議，鏡頭堵麥、輿論炎上…",
   options:[
     {t:"開記者會鞠躬道歉",hint:"止血、形象受損",eff:S=>inc(S,{chr:-4,happy:-5}),res:S=>"你九十度鞠躬，暫時壓下風波。"},
     {t:"提告、硬拗到底",hint:"賭聲量（成敗兩極）",eff:S=>{if(chance(S,0.45)){S.flags.polStar=true;return inc(S,{chr:3,happy:2});}mile(S,"📉","醜聞延燒，政治聲望重挫");return inc(S,{chr:-6,happy:-7});},res:S=>"你選擇正面對決，成敗豪賭。"},
+  ]},
+{id:"死亡之握",min:30,max:78,once:true,w:S=>(S.track==="politics"&&S.rank>=1&&!S.flags.wasPresident&&!S.flags.deathShake)?9:0,cond:S=>S.track==="politics"&&S.rank>=1&&!S.flags.wasPresident,text:"黨內大場合，總統親切地走來與你握手、合影，鎂光燈閃個不停——但這可是傳說中會帶衰的「死亡之握」…",eff:S=>{S.flags.deathShake=true;let loss=Math.min(Math.max(300000,Math.round(Math.max(0,S.money)*0.06)),2500000);schedule(S,1+rnd(2),"chain_shakeCurse");mile(S,"🤝","被總統的『死亡之握』握到，衰運悄悄上身");return [...inc(S,{happy:-6,chr:-2,luck:-8}),...money(S,-loss)];}},
+{id:"chain_shakeCurse",chain:true,once:true,text:"「死亡之握」的衰運發酵：你莫名捲入一樁爭議、金流又離奇失利，媒體窮追猛打、民調直落。",eff:S=>{let loss=Math.min(Math.max(200000,Math.round(Math.max(0,S.money)*0.06)),2000000);return [...inc(S,{happy:-5,chr:-3,luck:-3}),...money(S,-loss)];}},
+{id:"立院打架",min:34,max:75,once:true,w:S=>(S.track==="politics"&&S.rank>=2)?14:0,cond:S=>S.track==="politics"&&S.rank>=2,choice:true,q:"審查爭議法案，朝野在議場推擠、潑水、丟豬內臟，眼看就要上演全武行…",
+  options:[
+    {t:"衝上主席台卡位肉搏",hint:"畫面很猛，但有受傷風險",eff:S=>{S.flags.brawl=true;let hurt=chance(S,0.65);if(hurt){S.health=clamp((S.health||50)-12,0,100);mile(S,"🚑","立院全武行，手被議事槌／門板夾傷，送醫急救");return inc(S,{con:-7,chr:1,happy:-4});}mile(S,"🥊","立院大亂鬥，你衝第一線搶下媒體版面");return inc(S,{chr:3,happy:1,con:-2});},res:S=>(S.health||50)<45?"混戰中你的手被夾個正著、血流不止，直接送醫縫合。":"你成了新聞畫面焦點，聲量大漲。"},
+    {t:"退到後排、假裝滑手機",hint:"明哲保身",eff:S=>inc(S,{chr:-2,happy:1}),res:S=>"你選擇不淌這渾水，卻被酸『尸位素餐』。"},
   ]},
 /* ===== 幣圈韭菜線：歐印住套房、合約爆倉、交易所跑路 ===== */
 {id:"幣圈梭哈",min:20,max:50,once:true,w:S=>(S.money>200000&&!S.flags.cryptoIn&&S.age<=48)?10:0,cond:S=>S.money>150000&&!S.flags.cryptoIn,choice:true,q:S=>`同事、網友都在喊「這波財富重分配」，幣圈當沖、合約、迷因幣…你手上有 ${fmtMoney(S.money)}，要不要進場？`,
@@ -1327,12 +1361,43 @@ const EV=[
     {t:"還是過普通生活",hint:"低調",eff:S=>inc(S,{happy:1}),res:S=>"你選擇平凡。"},
   ]},
 {id:"星途",min:17,max:52,w:S=>(S.track==="star"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="star"&&S.rank<2,text:"演藝圈浮浮沉沉，你努力爭取曝光與代表作。",eff:S=>{const nx=TRACKS.star.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.35+sk("art")*0.05)){S.rank++;S.income=nx.income;mile(S,"🌟","一部代表作爆紅，晉升為「"+nx.t+"」");return inc(S,{happy:7,chr:3});}return inc(S,{happy:-2});}},
+/* ===== 職棒／職籃啦啦隊：應援台上的人氣之路 ===== */
+{id:"啦啦隊選拔",min:18,max:30,once:true,w:S=>((S.stats.chr>=62||sk("art")>=2)&&["student","service","gig","freelance","creator","design"].includes(S.track))?12:0,cond:S=>S.track!=="cheer"&&S.track!=="star"&&(S.stats.chr>=60||sk("art")>=2),choice:true,q:"職棒／職籃球團公開徵選啦啦隊，你的外型與律動被星探相中…",
+  options:[
+    {t:"加入職業啦啦隊！",hint:"顏值＋舞蹈之路",eff:S=>{enterTrack(S,"cheer",true);mile(S,"🎀","加入職業啦啦隊，成為「應援啦啦隊員」");return inc(S,{chr:3,happy:5});},res:S=>"你站上應援台，鎂光燈與加油聲把你包圍。"},
+    {t:"還是算了",hint:"低調過生活",eff:S=>inc(S,{happy:1}),res:S=>"你選擇平凡的生活。"},
+  ]},
+{id:"應援之路",min:18,max:46,w:S=>(S.track==="cheer"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="cheer"&&S.rank<2,text:"應援台上你拚人氣、練舞、經營社群，粉絲一天天變多。",eff:S=>{const nx=TRACKS.cheer.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("art")*0.05+(S.stats.chr-65)*0.006)){S.rank++;S.income=nx.income;mile(S,"🎀","人氣爆棚，晉升為「"+nx.t+"」");return inc(S,{happy:7,chr:3});}return inc(S,{happy:-2,con:-1});}},
+{id:"應援爆紅",min:18,max:42,once:true,w:S=>(S.track==="cheer")?16:0,cond:S=>S.track==="cheer",text:"你的應援舞蹈被球迷剪成短影音瘋傳，一夜之間成為全網焦點，還登上運動版頭條。",eff:S=>{S.connections=Math.min(100,S.connections+8);S.flags.cheerStar=true;return inc(S,{chr:6,happy:6});}},
+{id:"球場開球",min:18,max:46,kind:"minor",w:S=>(S.track==="cheer")?14:0,cond:S=>S.track==="cheer",text:"你受邀在滿場球迷前開球、擔任應援主持，全場為你歡呼。",eff:S=>[...inc(S,{chr:2,happy:4}),...money(S,60000)]},
+{id:"代言接不完",min:20,max:46,w:S=>(S.track==="cheer"&&S.rank>=1)?14:0,cond:S=>S.track==="cheer"&&S.rank>=1,text:"人氣高漲，運動品牌、手搖飲、遊戲代言接到手軟。",eff:S=>[...inc(S,{happy:4}),...money(S,900000)]},
+{id:"私生飯騷擾",min:18,max:46,once:true,w:S=>(S.track==="cheer"&&S.rank>=1)?9:0,cond:S=>S.track==="cheer",choice:true,q:"你遇上私生飯跟蹤、偷拍、堵門，隱私與人身安全亮紅燈…",
+  options:[
+    {t:"報警＋請保鑣",hint:"花錢保平安",eff:S=>[...inc(S,{happy:-3,con:-1}),...money(S,-300000)],res:S=>"你加強維安，稍微安心。"},
+    {t:"忍氣吞聲繼續跑通告",hint:"心力交瘁",eff:S=>inc(S,{happy:-6,con:-2}),res:S=>"你把恐懼吞進肚裡。"},
+  ]},
+{id:"酸民出征",min:18,max:46,kind:"minor",w:S=>(S.track==="cheer")?12:0,cond:S=>S.track==="cheer",text:"一張被惡意合成的圖在論壇瘋傳，酸民出征你的社群，留言不堪入目。",eff:S=>inc(S,{happy:-4})},
+{id:"轉戰演藝",min:22,max:40,once:true,w:S=>(S.track==="cheer"&&S.rank>=1&&sk("art")>=2)?10:0,cond:S=>S.track==="cheer"&&S.rank>=1,choice:true,q:"人氣正旺，經紀公司邀你跨足演藝圈、出唱片拍戲…",
+  options:[
+    {t:"轉戰演藝圈",hint:"更大的舞台",eff:S=>{enterTrack(S,"star",true);S.rank=1;S.income=TRACKS.star.ranks[1].income;mile(S,"🎤","從應援台轉戰演藝圈，簽約出道");return inc(S,{chr:3,happy:5});},res:S=>"你把應援人氣變成演藝資本。"},
+    {t:"守住應援台",hint:"熱愛球場",eff:S=>inc(S,{happy:2}),res:S=>"你選擇留在最愛的球場。"},
+  ]},
+{id:"啦啦隊退役",min:33,max:44,once:true,w:S=>(S.track==="cheer")?45:0,cond:S=>S.track==="cheer",choice:true,q:"體力與市場都提醒你，應援生涯到了轉換跑道的時刻…",
+  options:[
+    {t:"退役轉當經紀／教練",hint:"幕後發展",eff:S=>{enterTrack(S,"freelance",true);mile(S,"🎀","應援生涯退役，轉戰幕後");return inc(S,{happy:3});},res:S=>"你把舞台交給後輩，轉身幕後。"},
+    {t:"用累積人氣創業",hint:"開手搖飲／網拍",eff:S=>{enterTrack(S,"boss",true);mile(S,"🚀","退役後用累積人氣創業當老闆");return inc(S,{happy:4});},res:S=>"你把粉絲變成顧客。"},
+  ]},
 {id:"衝刺IPO",min:35,max:70,once:true,w:S=>(S.track==="boss"&&!S.flags.ipoPending&&(S.age-S.trackStart)>=5)?42:0,cond:S=>S.track==="boss"&&!S.flags.ipoPending,choice:true,q:"公司經營有成，投資人與承銷商建議你衝刺 IPO 上市…",
   options:[
     {t:"拚上市，做大做強！",hint:"通往企業帝國",eff:S=>{let ok=chance(S,0.4+sk("biz")*0.05+(S.stats.int-60)*0.004);if(ok){S.income=Math.round(S.income*1.5);S.flags.ipoPending=true;schedule(S,3+rnd(3),"chain_bizPeak");return inc(S,{happy:8,chr:3});}return [...inc(S,{happy:-6,con:-1}),...money(S,-Math.min(Math.round(S.money*0.3),60000000))];},res:S=>"這一搏，成王敗寇。"},
     {t:"守成、穩健經營",hint:"求穩",eff:S=>money(S,3000000),res:S=>"小而美、穩穩賺也很好。"},
   ]},
 {id:"國際巨星",min:30,max:70,once:true,w:S=>(S.track==="star"&&S.rank>=2&&S.stats.chr>=88)?45:0,cond:S=>S.track==="star"&&S.rank>=2,text:"你不只紅遍台灣，更進軍國際、代言接到手軟，站上華語天王／天后的位置。",eff:S=>{let ok=chance(S,0.3+(S.stats.luck-50)*0.004+sk("art")*0.04);if(ok){let v=200000000+rnd(900000000);S.income=Math.round(S.income*2.2);S.money+=v;S.flags.tycoon=true;mile(S,"🌏","進軍國際，成為華語天王／天后");return inc(S,{happy:12,chr:4});}return inc(S,{happy:2});}},
+{id:"綜藝爆氣",min:20,max:60,once:true,w:S=>(S.track==="star")?12:0,cond:S=>S.track==="star",choice:true,q:"你上綜藝節目玩遊戲，卻一路慘輸，還被後輩藝人虧「哥／姊你不行喔～」，全場笑成一片…",
+  options:[
+    {t:"當場爆氣、摔道具走人",hint:"上熱搜但被貼標籤",eff:S=>{S.flags.soreLoser=true;mile(S,"😤","綜藝錄影當場爆氣走人，被冠上『輸不起』的封號");return [...inc(S,{chr:-4,happy:-5}),...money(S,-200000)];},res:S=>"畫面被瘋傳、上了熱搜第一——從此「輸不起」的封號如影隨形。"},
+    {t:"自嘲帶過、笑著認輸",hint:"高情商圈粉",eff:S=>[...inc(S,{chr:3,happy:2}),...money(S,150000)],res:S=>"你大方自嘲，反而被讚高情商，路人緣大增。"},
+  ]},
 {id:"天使投資",min:30,max:62,once:true,w:S=>(sk("biz")>=3&&S.money>5000000)?8:0,cond:S=>S.money>3000000,choice:true,q:"學弟的新創找你當天使投資人，估值便宜、但十有八九會歸零…",
   options:[
     {t:"重押一筆，賭它成獨角獸",hint:"歸零 or 幾十倍",eff:S=>{let amt=Math.min(Math.round(S.money*0.4),25000000);S.money-=amt;let hit=chance(S,0.12+(S.stats.luck-50)*0.004+sk("biz")*0.02);if(hit){let mult=20+rnd(90);let gain=amt*mult;S.money+=gain;if(gain>=1000000000){S.flags.tycoon=true;mile(S,"💎","天使投資翻數十倍，身價暴漲破十億");}else mile(S,"🚀","天使投資大獲成功");return inc(S,{happy:11,int:1});}return inc(S,{happy:-5});},res:S=>"創投的世界，不成功便成仁。"},
@@ -1693,6 +1758,11 @@ const EV=[
 {id:"業配翻車",min:18,max:62,kind:"minor",w:S=>(S.track==="creator"||S.track==="star")?12:0,text:"你接了「抬雞店飆股神器」的業配，結果產品出包、粉絲炎上出征。",eff:S=>[...inc(S,{chr:-2,happy:-3}),...money(S,300000)]},
 {id:"演算法",min:16,max:62,kind:"minor",w:S=>S.track==="creator"?12:0,text:"平台一改演算法，你的流量一夕腰斬，焦慮到失眠。",eff:S=>inc(S,{happy:-3,con:-1})},
 {id:"聯名九妹",min:18,max:60,kind:"minor",w:S=>S.track==="creator"?9:0,text:"你和知名 YouTuber「九妹」聯名開箱，流量互蹭大爆發。",eff:S=>[...inc(S,{chr:2,happy:3}),...money(S,500000)]},
+{id:"開箱翻車",min:18,max:60,once:true,w:S=>(S.track==="creator")?11:0,cond:S=>S.track==="creator",choice:true,q:"你跑去開箱另一位知名網紅開的餐廳，鏡頭前忍不住開始嫌東嫌西…",
+  options:[
+    {t:"照樣毒舌、口無遮攔開嗆",hint:"流量爆但惹眾怒",eff:S=>{let beaten=chance(S,0.6);if(beaten){S.flags.boxBeaten=true;S.health=clamp((S.health||50)-15,0,100);mile(S,"🥊","開箱毒舌踩雷，在店門口被對方粉絲當街圍毆送醫");return [...inc(S,{con:-8,chr:-3,happy:-6}),...money(S,250000)];}return [...inc(S,{chr:-1,happy:2}),...money(S,300000)];},res:S=>S.flags.boxBeaten?"影片是紅了，但你也被堵在店門口一頓爆打、進了醫院。":"這集流量爆炸，留言區也吵翻天。"},
+    {t:"客氣稱讚、和氣生財",hint:"沒流量但平安",eff:S=>[...inc(S,{chr:1,happy:1}),...money(S,80000)],res:S=>"你嘴下留情，全身而退。"},
+  ]},
 
 /* ===== 追星 → 名人結婚 → 異國婚姻（item 7） ===== */
 {id:"追星狂熱",min:14,max:48,w:S=>(S.rel!=="已婚")?9:4,choice:true,q:"你瘋狂迷上一位偶像，砸錢應援、跑遍每場演唱會…",
@@ -1998,6 +2068,11 @@ const EV=[
 {id:"盛產價崩",min:22,max:70,w:S=>(S.track==="farm")?13:0,cond:S=>S.track==="farm",text:"今年大豐收，結果盛產導致價格崩盤，菜賤傷農，你欲哭無淚。",eff:S=>[...money(S,-200000),...inc(S,{happy:-4})]},
 {id:"品牌小農",min:28,max:65,once:true,w:S=>(S.track==="farm"&&sk("biz")>=2)?16:0,cond:S=>S.track==="farm",text:"你做起產銷履歷、網路直售、觀光農場，成了爆紅的明星小農。",eff:S=>{S.income=Math.round(S.income*1.5);mile(S,"🌾","打出品牌，成為明星小農");return [...inc(S,{happy:6}),...money(S,500000)];}},
 {id:"颱風毀收成",min:20,max:70,kind:"minor",w:S=>(S.track==="farm")?11:0,text:"一個強颱把你即將採收的作物打得稀爛，一整季的心血泡湯。",eff:S=>[...money(S,-300000),...inc(S,{happy:-4})]},
+{id:"還我牛",min:24,max:70,once:true,w:S=>(S.track==="farm")?12:0,cond:S=>S.track==="farm",choice:true,q:"某政黨民代選前拍胸脯保證收購你的作物、補助你的牛隻，選後政策急轉彎、支票全跳票，你血本無歸、連牛都被拍賣抵債…",
+  options:[
+    {t:"衝到市政府前大喊「還我牛！」",hint:"悲情抗議、媒體瘋傳",eff:S=>{S.flags.returnMyCow=true;S.connections=Math.min(100,S.connections+6);mile(S,"🐮","跑到市政府前聲淚俱下大喊「還我牛」，全國瘋傳");let win=chance(S,0.45);return win?[...money(S,300000),...inc(S,{chr:4,happy:-2})]:inc(S,{chr:3,happy:-5});},res:S=>"你成了新聞畫面裡那個「還我牛」的悲情農民——輿論同情，官員總算出面。"},
+    {t:"摸摸鼻子自認倒楣",hint:"吞下去、少折騰",eff:S=>[...money(S,-200000),...inc(S,{happy:-7})],res:S=>"你把苦水往肚裡吞，日子還是要過。"},
+  ]},
 {id:"作品被抄",min:24,max:60,w:S=>(S.track==="design")?11:0,cond:S=>S.track==="design",choice:true,q:"你的設計作品被大廠抄襲拿去商用，你發現了…",
   options:[
     {t:"提告捍衛著作權",hint:"耗時但爭一口氣",eff:S=>{if(chance(S,0.5))return [...money(S,800000),...inc(S,{happy:3})];return [...money(S,-200000),...inc(S,{happy:-3})];},res:S=>"智財官司曠日廢時。"},
@@ -2420,7 +2495,7 @@ function checkDeath(){
   // 健康度＝後天造化：決定你在高齡能活多久（養生就醫者長壽、放縱者早衰）
   if(!die&&S.age>=62){
     const h=S.health||50;
-    let base=Math.max(0,(65-h))*0.005 + Math.max(0,(S.age-82))*0.007;
+    let base=Math.max(0,(65-h))*0.005 + Math.max(0,(S.age-82))*0.007 + Math.max(0,(S.age-100))*0.013;
     if(base>0){
       if(S.flags.tough)base*=0.7;
       if(S.flags.homeless)base*=1.6;
@@ -2429,7 +2504,7 @@ function checkDeath(){
       if(R()<base){die=true;reason=h>=65?"高壽善終，你在睡夢中安詳離世。":"年事已高，你在睡夢中離世。";}
     }
   }
-  if(S.age>=105&&!die){die=true;reason="你活過百歲、成了傳說級人瑞，最終安詳謝幕。";}
+  if(S.age>=122&&!die){die=true;reason="你活到 122 歲，追平台灣有史以來最長壽的紀錄，成為真正的傳奇人瑞，在眾人祝福中安詳謝幕。";}
   if(die){
     if(S.flags.blessed&&!S.usedRevive&&s.con<=0&&chance(S,0.5)){S.usedRevive=true;s.con=25;logLine(S.age,"命懸一線，神明保佑你撿回一命！🙏",[["con",25]],"big");return;}
     S.alive=false;logLine(S.age,reason,[],"death");endGame();
@@ -2479,7 +2554,7 @@ function endGame(){
   const a=S.achv;
   if(SKILLS.some(sd=>sk(sd.k)>=5))a.push("🎯 專精大師");
   if(SKILLS.filter(sd=>sk(sd.k)>=3).length>=3)a.push("🧩 多才多藝");
-  if(S.age>=95)a.push("🧓 人瑞級長壽");if(S.age<30&&!S.ending)a.push("💀 英年早逝");
+  if(S.age>=115)a.push("🕯️ 超級人瑞");else if(S.age>=95)a.push("🧓 人瑞級長壽");if(S.age<30&&!S.ending)a.push("💀 英年早逝");
   if(p.money>=1e8)a.push("💎 億萬富翁");else if(p.money>=3e7)a.push("💰 財富自由");
   if(S.money<0)a.push("💳 負債收場");
   if(p.int>=92)a.push("🧠 學霸傳說");if(p.chr>=92)a.push("🌟 顏值天花板");
