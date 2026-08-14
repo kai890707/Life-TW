@@ -876,7 +876,7 @@ const EV=[
 {id:"會考",min:15,max:16,once:true,w:400,cond:S=>S.track==="student"&&!S.flags.dropout&&!S.left,eff:S=>{
   const iq=S.stats.int+(S.flags.exam?6:0)+sk("acad")*4+sk("tech")*2;
   let sch,mod;
-  if(iq>=80){sch=pick(["建國中學","北一女中","市立第一志願"]);mod={int:5,happy:2};S.flags.hsTop=true;}
+  if(iq>=80){sch=S.sex==="男"?"建國中學":S.sex==="女"?"北一女中":"市立第一志願";mod={int:5,happy:2};S.flags.hsTop=true;}
   else if(iq>=60){sch=pick(["市立高中","國立高中"]);mod={int:3};}
   else if(iq>=42){sch=chance(S,0.5)?"私立高中":"高職";mod={};if(sch==="高職")S.flags.voc=true;}
   else {sch="高職／夜校";mod={};S.flags.voc=true;S.flags.lowAcad=true;}
