@@ -412,6 +412,7 @@ function rollSkillCaps(S){
   }
 }
 
+const ZODIAC=["鼠","牛","虎","兔","龍","蛇","馬","羊","猴","雞","狗","豬"];
 /* ==========================================================================
    職涯階梯：升遷需「年資 + 能力」，gig（外送）無升遷
    ========================================================================== */
@@ -658,6 +659,10 @@ const ACHIEVEMENTS=[
   {id:"reform",icon:"🌤️",nm:"浪子回頭",c:S=>S.flags.reform},
   {id:"rags",icon:"🐟",nm:"鹹魚翻身",c:S=>S.fam&&S.fam.id==="poor"&&S.peak.prestige>=6},
   {id:"master",icon:"🎯",nm:"專精大師",c:S=>SKILLS.some(sd=>sk(sd.k)>=5)},
+  {id:"borough",icon:"🎗️",nm:"地方里長",c:S=>S.flags.borough},
+  {id:"polStar",icon:"📣",nm:"聲量政治明星",c:S=>S.flags.polStar},
+  {id:"rekt",icon:"🥬",nm:"幣圈韭菜",c:S=>S.flags.rekt},
+  {id:"cryptoRich",icon:"🪙",nm:"幣圈翻身",c:S=>S.flags.cryptoRich},
 ];
 function loadAchv(){try{return new Set(JSON.parse(localStorage.getItem("twlife_achv")||"[]"));}catch(e){return new Set();}}
 function saveAchv(set){try{localStorage.setItem("twlife_achv",JSON.stringify([...set]));}catch(e){}}
@@ -1191,7 +1196,14 @@ const EV=[
     {t:"求神明指點",hint:"信仰＋",eff:S=>{let holy=chance(S,S.flags.blessed?0.7:0.5);return inc(S,holy?{faith:6,happy:5}:{faith:2,happy:-1});},res:S=>"你心裡踏實多了。"},
     {t:"我信我自己",hint:"人定勝天",eff:S=>inc(S,{int:2}),res:S=>"你相信人定勝天。"},
   ]},
-{id:"犯太歲",min:20,max:80,kind:"minor",w:S=>S.flags.tough?0:10,text:"今年犯太歲，水逆到爆。",eff:S=>{if(S.stats.faith>50||S.flags.blessed){logLine(S.age,"還好你安太歲拜得勤，神明保佑逢凶化吉 🙏",[],"big");return [];}return inc(S,{happy:-4,con:-2,luck:-2});}},
+/* ===== 生肖本命年：犯太歲要安太歲、點光明燈，鐵齒者衰運纏身 ===== */
+{id:"本命年",min:24,max:84,w:S=>(S.age%12===0&&!S.flags["taisui"+S.age])?220:0,cond:S=>S.age%12===0&&!S.flags["taisui"+S.age],choice:true,
+  q:S=>{if(!S.zodiac)S.zodiac=ZODIAC[rnd(12)];return `你${S.age}歲，正逢${S.zodiac}年本命年——老一輩耳提面命：犯太歲、諸事不順，要去廟裡安太歲、點光明燈嗎？`;},
+  options:[
+    {t:"乖乖安太歲、點光明燈",hint:"花小錢求整年平安",eff:S=>{S.flags["taisui"+S.age]=true;S.flags.taisuiSafe=S.age;return [...inc(S,{faith:5,happy:3,luck:2}),...money(S,-6000)];},res:S=>"你把太歲君安在廟裡，光明燈點好點滿，心裡踏實。"},
+    {t:"鐵齒，不信這套",hint:"省錢，但今年衰運纏身",eff:S=>{S.flags["taisui"+S.age]=true;S.flags.taisuiRisk=S.age;return inc(S,{happy:1});},res:S=>"你鐵齒不信邪——但願別出事。"},
+  ]},
+{id:"犯太歲",min:20,max:88,kind:"minor",w:S=>{if(S.flags.tough)return 0;if(S.flags.taisuiRisk===S.age)return 42;if(S.age%12===0)return 16;return 8;},text:"今年犯太歲，水逆到爆——諸事不順、破財又傷身。",eff:S=>{if(S.flags.taisuiSafe===S.age||S.stats.faith>50||S.flags.blessed){logLine(S.age,"還好你安太歲拜得勤，神明保佑逢凶化吉 🙏",[],"big");return inc(S,{happy:2});}if(S.flags.taisuiRisk===S.age)return [...inc(S,{happy:-7,con:-3,luck:-4}),...money(S,-Math.min(Math.max(50000,Math.round(Math.max(0,S.money)*0.05)),300000))];return inc(S,{happy:-4,con:-2,luck:-2});}},
 {id:"改運",min:30,max:70,w:S=>S.stats.luck<45?9:0,choice:true,q:"最近諸事不順，要花錢改運嗎？",
   options:[
     {t:"做法事買開運物",hint:"運氣＋",eff:S=>[...inc(S,{luck:8,faith:4,happy:2}),...money(S,-80000)],res:S=>"花錢買心安。"},
@@ -1237,9 +1249,15 @@ const EV=[
 {id:"貴人",min:22,max:70,w:S=>4+S.stats.luck*0.1,text:"你遇到人生貴人，出現轉機。",eff:S=>[...inc(S,{happy:5,int:2}),...money(S,120000)]},
 
 /* ===== 隱藏結局觸發鏈 ===== */
-{id:"從政",min:28,max:45,once:true,w:S=>(sk("talk")>=3&&["student","office","civil","teach","freelance"].includes(S.track)&&S.eduTier&&!S.flags.dropout)?9:0,cond:S=>S.track!=="politics"&&sk("talk")>=3,choice:true,q:"你能言善道又有人脈，有政黨找你參選，要踏入政壇嗎？",
+/* ===== 里長：地方紮根，踏入政壇的第一步（也是選議員的跳板） ===== */
+{id:"選里長",min:28,max:62,once:true,w:S=>(S.track!=="politics"&&!S.flags.borough&&(sk("talk")>=2||S.connections>=32||S.stats.chr>=62)&&!downAndOut(S))?26:0,cond:S=>S.track!=="politics"&&!S.flags.borough&&!downAndOut(S),choice:true,q:"街坊鄰居拱你出來選里長，服務鄉里、也是踏入政壇的第一步…",
   options:[
-    {t:"投身政治，從助理做起",hint:"要靠選舉往上爬",eff:S=>{enterTrack(S,"politics",true);mile(S,"🗳️","投入政壇當「議員助理」");return inc(S,{chr:3});},res:S=>"你踏上了從政之路。"},
+    {t:"參選里長，紮根地方",hint:"顏值＋口才＋人脈拚選票",eff:S=>{let win=chance(S,0.4+(S.stats.chr-55)*0.006+sk("talk")*0.04+S.connections*0.002);if(win){S.flags.borough=true;S.connections=Math.min(100,S.connections+15);mile(S,"🎗️","當選里長，成為地方樁腳");return [...inc(S,{chr:3,happy:6}),...money(S,120000)];}mile(S,"📉","里長落選，白忙一場");return inc(S,{happy:-4});},res:S=>S.flags.borough?"你披上里長彩帶，逢年過節發春聯、幫鄰居喬事情。":"差幾票落選，鄰居還是喊你一聲熱心人。"},
+    {t:"當個安分的老百姓",hint:"不淌政治渾水",eff:S=>inc(S,{happy:1}),res:S=>"你選擇遠離政治。"},
+  ]},
+{id:"從政",min:28,max:56,once:true,w:S=>{if(S.track==="politics")return 0;if(S.flags.borough)return 60;return (sk("talk")>=3&&["student","office","civil","teach","freelance"].includes(S.track)&&S.eduTier&&!S.flags.dropout)?9:0;},cond:S=>S.track!=="politics"&&(sk("talk")>=3||S.flags.borough),choice:true,q:S=>S.flags.borough?"你當里長經營地方有成，政黨看上你、找你更上一層樓參選，要正式從政嗎？":"你能言善道又有人脈，有政黨找你參選，要踏入政壇嗎？",
+  options:[
+    {t:"投身政治，從助理做起",hint:"要靠選舉往上爬",eff:S=>{enterTrack(S,"politics",true);if(S.flags.borough){S.connections=Math.min(100,S.connections+10);}mile(S,"🗳️","投入政壇當「議員助理」");return inc(S,{chr:3});},res:S=>"你踏上了從政之路。"},
     {t:"政治太黑暗",hint:"婉拒",eff:S=>inc(S,{happy:1}),res:S=>"你選擇遠離政治。"},
   ]},
 {id:"參選市議員",min:29,max:60,w:S=>(S.track==="politics"&&S.rank===0&&(S.age-S.trackStart)>=3&&S.money>=200000)?150:0,cond:S=>S.track==="politics"&&S.rank===0,choice:true,q:"基層歷練夠了，要投入市議員選戰嗎？（要選得上才算數）",
@@ -1257,6 +1275,38 @@ const EV=[
     {t:"角逐大位！",hint:"問鼎權力頂峰",eff:S=>{let win=chance(S,0.2+(S.stats.chr-70)*0.01+(S.stats.int-60)*0.005);if(win){S.flags.wasPresident=true;setEnding(S,"president","登上權力頂峰的一生","🇹🇼");mile(S,"🇹🇼","當選中華民國總統！");return [...inc(S,{happy:16,chr:6}),...money(S,3000000)];}mile(S,"🗳️","總統敗選，回歸立院");return inc(S,{happy:-6});},res:S=>S.ending&&S.ending.key==="president"?"萬民擁戴，你入主總統府！":"雖敗猶榮。"},
     {t:"當立委就好",hint:"見好就收",eff:S=>inc(S,{happy:2}),res:S=>"你守住立委崗位。"},
   ]},
+/* ===== 民代的日常：跑攤、選民服務、賄選、質詢、緋聞 ===== */
+{id:"跑攤",min:28,max:78,kind:"minor",w:S=>(S.track==="politics")?18:0,cond:S=>S.track==="politics",text:"婚喪喜慶、廟會剪綵、里民烤肉，你一天跑十攤、乾杯到胃翻——民代的日常。",eff:S=>{S.connections=Math.min(100,S.connections+2);if(S.stats.con<38&&chance(S,0.25)){S.health=clamp((S.health||50)-12,0,100);mile(S,"🍺","長年跑攤應酬，喝出肝硬化");return inc(S,{con:-4,happy:-3});}return inc(S,{con:-3,chr:1,happy:-1});}},
+{id:"選民服務",min:28,max:82,kind:"minor",w:S=>(S.track==="politics")?16:0,cond:S=>S.track==="politics",text:S=>pick(["深夜接到選民電話，說路燈壞了要你「馬上處理」。","選民拜託你喬紅單、關說小孩讀書，你笑著打哈哈。","服務處招牌被對手陣營潑漆，你連夜換新的。","你辦市民一日遊、發放老人共餐便當，選民揪甘心。"]),eff:S=>{S.connections=Math.min(100,S.connections+3);return inc(S,{happy:1,chr:1});}},
+{id:"賄選買票",min:29,max:66,once:true,w:S=>(S.track==="politics"&&S.rank<=1&&!S.flags.clean)?12:0,cond:S=>S.track==="politics"&&!S.flags.clean,choice:true,q:"選情膠著，樁腳建議「走路工」買票固樁，一票八百…",
+  options:[
+    {t:"買！有錢能使鬼推磨",hint:"選票↑ 但埋下賄選案",eff:S=>{S.flags.voteBuy=true;S.money-=Math.min(Math.max(800000,Math.round(Math.max(0,S.money)*0.15)),5000000);schedule(S,1+rnd(4),"chain_briberyBust");return inc(S,{happy:1});},res:S=>"你撒錢固樁，就賭沒人檢舉。"},
+    {t:"堅持乾淨選舉",hint:"清白但選情吃緊",eff:S=>{S.flags.clean=true;return inc(S,{chr:2,happy:1});},res:S=>"你打死不買票，靠政見拚。"},
+  ]},
+{id:"chain_briberyBust",chain:true,once:true,choice:true,q:"檢調查賄選！走路工名冊被起底，你被依《選罷法》起訴，恐當選無效…",
+  options:[
+    {t:"花錢請律師、切割樁腳",hint:"燒錢脫身（未必成功）",eff:S=>{let esc=chance(S,0.45+S.stats.int*0.003);S.money-=Math.min(Math.max(1500000,Math.round(Math.max(0,S.money)*0.3)),8000000);if(esc){S.flags.voteBuy=false;return inc(S,{happy:-4,chr:-2});}S.flags.corruptJail=true;jailTerm(S,2);mile(S,"⛓️","賄選案定讞，當選無效、鋃鐺入獄");return inc(S,{happy:-10,chr:-4});},res:S=>S.stateOverride==="服刑中"?"你走進看守所，政治生涯畫下句點。":"你砸錢切割，驚險過關。"},
+    {t:"認了，退出政壇",hint:"當選無效、退場",eff:S=>{S.flags.voteBuy=false;if(S.track==="politics"){S.track="none";S.income=Math.round((S.income||0)*0.1);}mile(S,"📉","賄選案坦承，黯然退出政壇");return inc(S,{happy:-8,chr:-2});},res:S=>"你鞠躬道歉、退出政壇。"},
+  ]},
+{id:"質詢爆紅",min:30,max:72,once:true,w:S=>(S.track==="politics"&&S.rank>=1)?14:0,cond:S=>S.track==="politics"&&S.rank>=1,text:"你一段犀利質詢／金句被剪成短影音瘋傳，聲量暴衝，全國都認得你。",eff:S=>{S.connections=Math.min(100,S.connections+8);S.flags.polStar=true;return inc(S,{chr:6,happy:6});}},
+{id:"政治緋聞",min:32,max:70,once:true,w:S=>(S.track==="politics"&&S.rank>=1)?9:0,cond:S=>S.track==="politics"&&S.rank>=1,choice:true,q:"週刊爆你的緋聞／私德爭議，鏡頭堵麥、輿論炎上…",
+  options:[
+    {t:"開記者會鞠躬道歉",hint:"止血、形象受損",eff:S=>inc(S,{chr:-4,happy:-5}),res:S=>"你九十度鞠躬，暫時壓下風波。"},
+    {t:"提告、硬拗到底",hint:"賭聲量（成敗兩極）",eff:S=>{if(chance(S,0.45)){S.flags.polStar=true;return inc(S,{chr:3,happy:2});}mile(S,"📉","醜聞延燒，政治聲望重挫");return inc(S,{chr:-6,happy:-7});},res:S=>"你選擇正面對決，成敗豪賭。"},
+  ]},
+/* ===== 幣圈韭菜線：歐印住套房、合約爆倉、交易所跑路 ===== */
+{id:"幣圈梭哈",min:20,max:50,once:true,w:S=>(S.money>200000&&!S.flags.cryptoIn&&S.age<=48)?10:0,cond:S=>S.money>150000&&!S.flags.cryptoIn,choice:true,q:S=>`同事、網友都在喊「這波財富重分配」，幣圈當沖、合約、迷因幣…你手上有 ${fmtMoney(S.money)}，要不要進場？`,
+  options:[
+    {t:"歐印梭哈！賭一把翻身",hint:"全押（暴富或住套房）",eff:S=>{S.flags.cryptoIn=true;let stake=Math.round(Math.max(0,S.money)*0.9);S.money-=stake;let moon=chance(S,0.28+sk("biz")*0.02);if(moon){S.money+=Math.round(stake*(2+rnd(4)));S.flags.cryptoRich=true;mile(S,"🚀","幣圈歐印，一夜翻數倍");return inc(S,{happy:14,chr:2});}S.flags.rekt=true;mile(S,"📉","歐印住套房，畢業出場");return inc(S,{happy:-14,con:-2});},res:S=>S.flags.cryptoRich?"幣價上月球，你賺爛了！":"幣價瞬間腰斬再腰斬，你畢業了。"},
+    {t:"只玩閒錢、定期定額",hint:"小賭怡情",eff:S=>{S.flags.cryptoIn=true;S.flags.cryptoHold=true;let stake=Math.min(Math.round(Math.max(0,S.money)*0.15),500000);S.money-=stake;let up=chance(S,0.5);let r=up?(0.5+R()):-(0.4+R()*0.4);S.money+=Math.round(stake*(1+r));if(up&&chance(S,0.5))schedule(S,1+rnd(3),"chain_exchangeRun");return inc(S,{happy:up?4:-3});},res:S=>"你只玩閒錢，還睡得著覺。"},
+    {t:"這是龐氏騙局，不碰",hint:"守住錢包",eff:S=>{S.flags.cryptoIn=true;return inc(S,{happy:1,int:1});},res:S=>"你冷眼看著這場泡沫。"},
+  ]},
+{id:"合約爆倉",min:20,max:52,once:true,w:S=>(S.flags.cryptoIn&&!S.flags.rekt&&S.money>300000)?8:0,cond:S=>S.flags.cryptoIn&&S.money>300000,choice:true,q:"你學會開合約、拉槓桿，一根插針就能爆倉，也可能一夜致富…",
+  options:[
+    {t:"開百倍槓桿賭方向",hint:"爆倉或翻倍",eff:S=>{let stake=Math.round(Math.max(0,S.money)*0.5);S.money-=stake;if(chance(S,0.4)){S.money+=stake*3;return inc(S,{happy:8});}S.flags.rekt=true;mile(S,"💥","合約爆倉，本金瞬間歸零");return inc(S,{happy:-12,con:-1});},res:S=>S.flags.rekt?"一根長針，你的倉位灰飛煙滅。":"賭對方向，帳戶翻紅！"},
+    {t:"只做現貨，不碰合約",hint:"守紀律",eff:S=>inc(S,{happy:1,int:1}),res:S=>"你告訴自己：合約是韭菜絞肉機。"},
+  ]},
+{id:"chain_exchangeRun",chain:true,once:true,text:"你存幣的交易所無預警倒閉、老闆捲款跑路，你的幣全被凍結、血本無歸。",eff:S=>{let loss=Math.min(Math.round(Math.max(0,S.money)*0.4),8000000);S.money-=loss;S.flags.rekt=true;mile(S,"🏃","交易所暴雷跑路，資產凍結歸零");return inc(S,{happy:-10,con:-1});}},
 {id:"出道",min:16,max:32,once:true,w:S=>(sk("art")>=4&&["student","service","gig","freelance","design"].includes(S.track))?12:0,cond:S=>S.track!=="star"&&sk("art")>=4,choice:true,q:"你的才藝出眾，星探發掘了你，要不要進演藝圈？",
   options:[
     {t:"簽約出道！",hint:"顏值之路",eff:S=>{enterTrack(S,"star",true);mile(S,"🎤","出道，成為「素人網紅」");return inc(S,{happy:4,chr:2});},res:S=>"鎂光燈在等你。"},
