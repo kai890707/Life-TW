@@ -339,64 +339,59 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function fmtMoney(n){const neg=n<0;let v=Math.abs(n);let s;if(v>=1e8)s=(v/1e8).toFixed(v>=1e9?0:2).replace(/\.?0+$/,'')+"億";else if(v>=1e4)s=Math.round(v/1e4).toLocaleString()+"萬";else s=Math.round(v).toLocaleString();return (neg?"負":"")+"NT$"+s;}
 function fmtDelta(n){const neg=n<0;let v=Math.abs(n);let s=v>=1e4?(Math.round(v/1e4).toLocaleString()+"萬"):v.toLocaleString();return (neg?"-":"+")+s;}
 
-/* ---------- 縣市（影響資質、家世貧富、教育資源，各有風味） ----------
-   wealthBias 正=偏富、負=偏窮；edu=教育資源；eco=在地就業機會傾向 ---------- */
+/* ---------- 縣市（影響資質與教育資源，各有風味；家境為全台統一隨機、不受縣市影響） ----------
+   mod=資質加成；edu=教育資源；tag=在地標籤 ---------- */
 const REGIONS=[
   /* 北部 */
-  {id:"klu",nm:"基隆",d:"雨港：山海環抱、海味十足",mod:{con:3,happy:-3},wealthBias:-1,edu:0,kid:"雨都的孩子，在山海與廟口小吃間長大。"},
-  {id:"tpe",nm:"台北",d:"天龍國：資源匯聚、機會最多",mod:{int:6,chr:3,happy:-4},wealthBias:2,edu:2,tag:"天龍人",kid:"從小補習、才藝樣樣來，眼界開得早。"},
-  {id:"ntpc",nm:"新北",d:"生活便利、多元共融的大都會",mod:{con:2,happy:-1},wealthBias:0,edu:0,kid:"在生活機能滿分的城市長大，什麼都近。"},
-  {id:"tyn",nm:"桃園",d:"工業航空城、機會多元",mod:{con:3},wealthBias:1,edu:0,kid:"在工業城長大，早早見識各行各業。"},
-  {id:"hsz",nm:"新竹市",d:"竹科命：科技資源、工程師家庭",mod:{int:9},wealthBias:2,edu:2,tag:"科技囝仔",kid:"爸媽在竹科上班，你從小就摸電腦、玩程式。"},
-  {id:"hsc",nm:"新竹縣",d:"竹北新貴＋客家庄：晴耕雨讀",mod:{int:5,con:2},wealthBias:1,edu:1,tag:"客家囝仔",kid:"客家庄長大，硬頸節儉、晴耕雨讀。"},
-  {id:"mia",nm:"苗栗",d:"苗栗國：山城客家、自成一格",mod:{con:5,int:1},wealthBias:-1,edu:-1,tag:"苗栗國",kid:"客家山城長大，硬頸又勤儉。"},
+  {id:"klu",nm:"基隆",d:"雨港：山海環抱、海味十足",mod:{con:3,happy:-3},edu:0,kid:"雨都的孩子，在山海與廟口小吃間長大。"},
+  {id:"tpe",nm:"台北",d:"天龍國：資源匯聚、機會最多",mod:{int:6,chr:3,happy:-4},edu:2,tag:"天龍人",kid:"從小補習、才藝樣樣來，眼界開得早。"},
+  {id:"ntpc",nm:"新北",d:"生活便利、多元共融的大都會",mod:{con:2,happy:-1},edu:0,kid:"在生活機能滿分的城市長大，什麼都近。"},
+  {id:"tyn",nm:"桃園",d:"工業航空城、機會多元",mod:{con:3},edu:0,kid:"在工業城長大，早早見識各行各業。"},
+  {id:"hsz",nm:"新竹市",d:"竹科命：科技資源、工程師家庭",mod:{int:9},edu:2,tag:"科技囝仔",kid:"爸媽在竹科上班，你從小就摸電腦、玩程式。"},
+  {id:"hsc",nm:"新竹縣",d:"竹北新貴＋客家庄：晴耕雨讀",mod:{int:5,con:2},edu:1,tag:"客家囝仔",kid:"客家庄長大，硬頸節儉、晴耕雨讀。"},
+  {id:"mia",nm:"苗栗",d:"苗栗國：山城客家、自成一格",mod:{con:5,int:1},edu:-1,tag:"苗栗國",kid:"客家山城長大，硬頸又勤儉。"},
   /* 中部 */
-  {id:"txg",nm:"台中",d:"宜居宜業、氣候舒適、生活愜意",mod:{happy:5,chr:2},wealthBias:1,edu:1,kid:"在宜居的台中，日子過得舒服自在。"},
-  {id:"chw",nm:"彰化",d:"傳產、三合院、務實勤儉",mod:{con:5,int:1},wealthBias:-1,edu:0,kid:"三合院裡的孩子，從小幫忙農事、腳踏實地。"},
-  {id:"nan",nm:"南投",d:"山林茶鄉：日月潭、好山好茶",mod:{con:6,happy:4},wealthBias:-1,edu:-1,kid:"群山環繞、日月潭邊，在茶香裡長大。"},
-  {id:"yun",nm:"雲林",d:"農業首都：糧倉之鄉、純樸踏實",mod:{con:6,int:1},wealthBias:-2,edu:-1,kid:"農業大縣的孩子，跟著阿公阿嬤下田。"},
+  {id:"txg",nm:"台中",d:"宜居宜業、氣候舒適、生活愜意",mod:{happy:5,chr:2},edu:1,kid:"在宜居的台中，日子過得舒服自在。"},
+  {id:"chw",nm:"彰化",d:"傳產、三合院、務實勤儉",mod:{con:5,int:1},edu:0,kid:"三合院裡的孩子，從小幫忙農事、腳踏實地。"},
+  {id:"nan",nm:"南投",d:"山林茶鄉：日月潭、好山好茶",mod:{con:6,happy:4},edu:-1,kid:"群山環繞、日月潭邊，在茶香裡長大。"},
+  {id:"yun",nm:"雲林",d:"農業首都：糧倉之鄉、純樸踏實",mod:{con:6,int:1},edu:-1,kid:"農業大縣的孩子，跟著阿公阿嬤下田。"},
   /* 南部 */
-  {id:"cyi",nm:"嘉義市",d:"木都：火雞肉飯、小而美",mod:{happy:4,chr:1},wealthBias:0,edu:0,kid:"小城步調悠閒，火雞肉飯配日常。"},
-  {id:"cyq",nm:"嘉義縣",d:"阿里山下：農業、純樸",mod:{con:6,happy:2},wealthBias:-2,edu:-2,kid:"阿里山下的農鄉孩子，純樸知足。"},
-  {id:"tnn",nm:"台南",d:"美食古都、人情味濃",mod:{happy:7,con:2},wealthBias:0,edu:0,tag:"美食魂",kid:"從小吃遍巷弄美食，人情味把你養得樂天知足。"},
-  {id:"khh",nm:"高雄",d:"海港、重工、講義氣",mod:{con:7,chr:2},wealthBias:0,edu:-1,tag:"海口人",kid:"海口人的孩子，講義氣、身體勇。"},
-  {id:"ptn",nm:"屏東",d:"國境之南、農漁大縣",mod:{con:6,happy:3},wealthBias:-1,edu:-1,kid:"日頭赤炎炎，你在農漁之鄉曬得黝黑健康。"},
+  {id:"cyi",nm:"嘉義市",d:"木都：火雞肉飯、小而美",mod:{happy:4,chr:1},edu:0,kid:"小城步調悠閒，火雞肉飯配日常。"},
+  {id:"cyq",nm:"嘉義縣",d:"阿里山下：農業、純樸",mod:{con:6,happy:2},edu:-2,kid:"阿里山下的農鄉孩子，純樸知足。"},
+  {id:"tnn",nm:"台南",d:"美食古都、人情味濃",mod:{happy:7,con:2},edu:0,tag:"美食魂",kid:"從小吃遍巷弄美食，人情味把你養得樂天知足。"},
+  {id:"khh",nm:"高雄",d:"海港、重工、講義氣",mod:{con:7,chr:2},edu:-1,tag:"海口人",kid:"海口人的孩子，講義氣、身體勇。"},
+  {id:"ptn",nm:"屏東",d:"國境之南、農漁大縣",mod:{con:6,happy:3},edu:-1,kid:"日頭赤炎炎，你在農漁之鄉曬得黝黑健康。"},
   /* 東部 */
-  {id:"ilan",nm:"宜蘭",d:"好山好水、步調悠閒",mod:{happy:6,con:2},wealthBias:-1,edu:0,kid:"在好山好水間長大，個性溫和知足。"},
-  {id:"hun",nm:"花蓮",d:"後山：好山好水、自然純樸",mod:{con:10,happy:5},wealthBias:-2,edu:-1,tag:"山海之子",kid:"在山海之間奔跑長大，體格特別好。"},
-  {id:"ttt",nm:"台東",d:"慢活淨土：山海療癒、放鬆自在",mod:{con:9,happy:6},wealthBias:-2,edu:-2,kid:"與山海為伍，純真自在，心特別寬。"},
+  {id:"ilan",nm:"宜蘭",d:"好山好水、步調悠閒",mod:{happy:6,con:2},edu:0,kid:"在好山好水間長大，個性溫和知足。"},
+  {id:"hun",nm:"花蓮",d:"後山：好山好水、自然純樸",mod:{con:10,happy:5},edu:-1,tag:"山海之子",kid:"在山海之間奔跑長大，體格特別好。"},
+  {id:"ttt",nm:"台東",d:"慢活淨土：山海療癒、放鬆自在",mod:{con:9,happy:6},edu:-2,kid:"與山海為伍，純真自在，心特別寬。"},
   /* 離島 */
-  {id:"pho",nm:"澎湖",d:"菊島：離島觀光、海風堅韌",mod:{con:6,happy:3},wealthBias:-2,edu:-2,tag:"離島人",kid:"菊島的孩子，在海風中堅韌長大。"},
-  {id:"kmn",nm:"金門",d:"前線僑鄉：高粱、戰地風情",mod:{con:6,int:2},wealthBias:-1,edu:-1,tag:"離島人",kid:"前線僑鄉長大，聽著砲聲與高粱的故事。"},
-  {id:"lca",nm:"馬祖",d:"連江：閩東風情、藍眼淚故鄉",mod:{con:7,happy:2},wealthBias:-2,edu:-2,tag:"離島人",kid:"馬祖芹壁的孩子，與大海和藍眼淚為伍。"},
+  {id:"pho",nm:"澎湖",d:"菊島：離島觀光、海風堅韌",mod:{con:6,happy:3},edu:-2,tag:"離島人",kid:"菊島的孩子，在海風中堅韌長大。"},
+  {id:"kmn",nm:"金門",d:"前線僑鄉：高粱、戰地風情",mod:{con:6,int:2},edu:-1,tag:"離島人",kid:"前線僑鄉長大，聽著砲聲與高粱的故事。"},
+  {id:"lca",nm:"馬祖",d:"連江：閩東風情、藍眼淚故鄉",mod:{con:7,happy:2},edu:-2,tag:"離島人",kid:"馬祖芹壁的孩子，與大海和藍眼淚為伍。"},
 ];
 /* ---------- 家世（隨機抽，有礦稀有；受出生縣市貧富影響） ---------- */
 const FAMILIES=[
-  {id:"gold",nm:"家裡有礦 👑",w:3,funds:"full",allowance:8000,inherit:25000000,filial:false,net:true,tag:"富二代"},
-  {id:"rich",nm:"家境富裕 🏡",w:10,funds:"full",allowance:4000,inherit:4000000,filial:false,net:true,tag:""},
-  {id:"mid",nm:"小康家庭 🍜",w:27,funds:"partial",allowance:1500,inherit:800000,filial:false,net:false,tag:""},
-  {id:"work",nm:"雙薪工薪 💼",w:40,funds:"none",allowance:500,inherit:150000,filial:true,net:false,tag:""},
-  {id:"poor",nm:"清寒家庭 🍚",w:20,funds:"none",allowance:0,inherit:0,filial:true,net:false,mod:{con:4},tag:"苦過來的"},
+  {id:"gold",nm:"家裡有礦 👑",w:3,funds:"full",inherit:25000000,filial:false,net:true,tag:"富二代"},
+  {id:"rich",nm:"家境富裕 🏡",w:10,funds:"full",inherit:4000000,filial:false,net:true,tag:""},
+  {id:"mid",nm:"小康家庭 🍜",w:27,funds:"partial",inherit:800000,filial:false,net:false,tag:""},
+  {id:"work",nm:"雙薪工薪 💼",w:40,funds:"none",inherit:150000,filial:true,net:false,tag:""},
+  {id:"poor",nm:"清寒家庭 🍚",w:20,funds:"none",inherit:0,filial:true,net:false,mod:{con:4},tag:"苦過來的"},
 ];
 function rollFamily(){
-  const bias=S.region.wealthBias||0;
-  let list=FAMILIES.map((f,i)=>({f,i,w:f.w}));
-  list.forEach(o=>{ // i0=有礦…i4=清寒
-    if(bias>0){ if(o.i<=1)o.w*=(1+bias*0.6); if(o.i>=3)o.w/=(1+bias*0.4); }
-    else if(bias<0){ const b=-bias; if(o.i>=3)o.w*=(1+b*0.7); if(o.i<=1)o.w/=(1+b*0.7); }
-  });
-  let tot=list.reduce((a,o)=>a+o.w,0),r=R()*tot;
-  for(const o of list){ r-=o.w; if(r<=0) return o.f; }
+  // 家境純加權隨機，不受出生縣市影響——偏鄉也有土豪、天龍區也有清寒
+  let tot=FAMILIES.reduce((a,f)=>a+f.w,0),r=R()*tot;
+  for(const f of FAMILIES){ r-=f.w; if(r<=0) return f; }
   return FAMILIES[3];
 }
 function badMul(){return 1;}
 /* ---------- 童年（0–6）：外來因素隨機生成的際遇 ---------- */
 const CHILD_TRAITS=[
   {p:S=>0.45, nm:S=>S.fam.net?"家境優渥，童年不缺物質。":S.fam.id==="poor"?"家境清寒，但爸媽拚命給你溫飽。":"家庭平實溫暖。", eff:S=>{}},
-  {p:S=>0.5, nm:S=>"父母關係融洽，你在充足的愛裡長大。", eff:S=>inc(S,{happy:6})},
-  {p:S=>0.25, nm:S=>"父母常爭吵／聚少離多，你的童年有點孤單。", eff:S=>inc(S,{happy:-7})},
-  {p:S=>0.4, nm:S=>"你身體勇健、很少生病。", eff:S=>inc(S,{con:6})},
-  {p:S=>0.3, nm:S=>"你從小體弱多病，進出醫院是家常便飯。", eff:S=>inc(S,{con:-8})},
+  {grp:"parents", p:S=>0.5, nm:S=>"父母關係融洽，你在充足的愛裡長大。", eff:S=>inc(S,{happy:6})},
+  {grp:"parents", p:S=>0.25, nm:S=>"父母常爭吵／聚少離多，你的童年有點孤單。", eff:S=>inc(S,{happy:-7})},
+  {grp:"health", p:S=>0.4, nm:S=>"你身體勇健、很少生病。", eff:S=>inc(S,{con:6})},
+  {grp:"health", p:S=>0.3, nm:S=>"你從小體弱多病，進出醫院是家常便飯。", eff:S=>inc(S,{con:-8})},
   {p:S=>(S.fam.funds!=="none"?0.45:0.2), nm:S=>"你早早展現讀書天分，成績名列前茅。", eff:S=>{inc(S,{int:6});S.skills.acad=Math.max(S.skills.acad,2);}},
   {p:S=>0.018, nm:S=>"你是萬中選一的<b>神童</b>——三歲識千字、五歲能心算，媒體都來採訪。", eff:S=>{S.flags.prodigy=true;inc(S,{int:14});S.skills.acad=Math.max(S.skills.acad,4);}},
   {p:S=>0.28, nm:S=>"你從小學才藝（鋼琴／畫畫／舞蹈），美感萌芽。", eff:S=>{inc(S,{chr:4});S.skills.art=Math.max(S.skills.art,3);}},
@@ -404,7 +399,7 @@ const CHILD_TRAITS=[
   {p:S=>0.2, nm:S=>"阿嬤常帶你跑宮廟、拜拜收驚。", eff:S=>{inc(S,{faith:8});S.skills.spirit=Math.max(S.skills.spirit,3);}},
   {p:S=>0.16, nm:S=>"你長得眉清目秀，走到哪都被稱讚。", eff:S=>inc(S,{chr:8})},
   {p:S=>0.14, nm:S=>"家附近龍蛇雜處，你早早學會看人臉色、跟大孩子混。", eff:S=>{inc(S,{con:2,happy:1});S.skills.street=Math.max(S.skills.street,3);}},
-  {p:S=>0.12, nm:S=>"一場意外／重病，在你身上留下印記。", eff:S=>inc(S,{con:-6,happy:-3})},
+  {grp:"health", p:S=>0.12, nm:S=>"一場意外／重病，在你身上留下印記。", eff:S=>inc(S,{con:-6,happy:-3})},
 ];
 
 /* ---------- 天賦 ---------- */
@@ -577,9 +572,14 @@ const TRACKS={
     {t:"店長／金牌業務",income:1500000,y:4,req:{chr:60}},
     {t:"加盟店老闆／代銷紅牌",income:4200000,y:11,req:{chr:68,int:58}},
   ]},
+  gangster:{nm:"黑道",ranks:[
+    {t:"跑腿小弟",income:500000},
+    {t:"角頭／圍事頭",income:1800000,y:4,req:{con:55}},
+    {t:"堂主／組頭",income:5000000,y:9,req:{con:60,chr:58}},
+  ]},
 };
-const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6,baseball:7,esports:6,insurance:4,realtor:5};
-const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀",baseball:"⚾",esports:"🎮",insurance:"📋",realtor:"🔑"};
+const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6,baseball:7,esports:6,insurance:4,realtor:5,gangster:3};
+const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀",baseball:"⚾",esports:"🎮",insurance:"📋",realtor:"🔑",gangster:"🔪"};
 /* 出社會：職涯與「主專長＋學歷」綁定，大部分人順著專長走，少數斜槓 */
 function topSkill(S){let best=null,bx=SK_THRESH[0]-1;for(const sd of SKILLS){const x=skXp(sd.k);if(x>bx){bx=x;best=sd;}}return best;}
 function careerReady(S){
@@ -636,12 +636,20 @@ function enterTrack(S,id,silent){
   S.flags.left=true; S.flags.careerStarted=true;  // 進入職場＝離開學生身分，升學事件不再觸發
   if(id==="mil")S.flags.served=true;               // 志願役＝已服役，不再另抽兵役
   if(!silent) mile(S,"💼","出社會，成為「"+TRACKS[id].ranks[0].t+"」");
+  if(!S.flags.familyStake){S.flags.familyStake=true;applyFamilyStake(S);}  // 出社會時，家境決定起跑點
+}
+/* 出社會的財務起跑點：有礦家庭直接贊助一桶金，清寒家庭則背學貸出發 */
+function applyFamilyStake(S){
+  const f=S.fam; if(!f)return;
+  const stake={gold:5000000,rich:1500000,mid:300000,work:0,poor:-250000}[f.id];
+  if(stake>0){S.money+=stake;mile(S,"💰","家裡贊助你 "+fmtMoney(stake)+" 起步，人生起跑點直接超車");}
+  else if(stake<0){S.money+=stake;S.flags.studentLoan=true;mile(S,"🎓",S.flags.dropout?"清寒又早早出社會，白手起家、起步就背了一身債":"背著學貸出社會，一畢業就負債");}
 }
 // 各職涯對應的「本職專長」——把骰子練進本職專長，升遷更快、也能補足能力門檻
-const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art",baseball:"ath",esports:"tech",insurance:"talk",realtor:"talk"};
+const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art",baseball:"ath",esports:"tech",insurance:"talk",realtor:"talk",gangster:"street"};
 function tryPromote(S){
   if(S.stateOverride) return;
-  if(["politics","star","creator","cheer","baseball","esports"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體／啦啦隊／職棒／電競靠戰績人氣，不是年資升遷
+  if(["politics","star","creator","cheer","baseball","esports","gangster"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體／啦啦隊／職棒／電競靠戰績、黑道靠地盤，不是年資升遷
   const tr=TRACKS[S.track]; if(!tr) return;
   const nx=tr.ranks[S.rank+1]; if(!nx) return;
   const tenure=S.age-S.trackStart;
@@ -770,6 +778,11 @@ const ACHIEVEMENTS=[
   {id:"cardSlave",icon:"💳",nm:"卡奴",c:S=>S.flags.cardSlave},
   {id:"loanShark",icon:"🏃",nm:"地下錢莊受害者",c:S=>S.flags.loanShark||S.flags.onTheRun},
   {id:"gas300",icon:"⛽",nm:"加油只加300",c:S=>S.flags.gas300},
+  {id:"gangCareer",icon:"🔪",nm:"黑道角頭",c:S=>S.peakTrack==="gangster"},
+  {id:"washedWhite",icon:"🕊️",nm:"黑道漂白從政",c:S=>S.flags.washedWhite},
+  {id:"vice",icon:"🎰",nm:"經營八大行業",c:S=>S.flags.vice},
+  {id:"studentLoan",icon:"🎓",nm:"學貸戰士",c:S=>S.flags.studentLoan},
+  {id:"silverStart",icon:"💰",nm:"含金湯匙起跑",c:S=>S.flags.familyStake&&S.fam&&(S.fam.id==="gold"||S.fam.id==="rich")},
   {id:"fullLoanWarrior",icon:"🏳️",nm:"全額貸戰士",c:S=>S.flags.fullLoanWarrior},
   {id:"gyb",icon:"🔥",nm:"GYB 讚！",c:S=>S.flags.gyb},
   {id:"doping",icon:"💉",nm:"禁藥風波",c:S=>S.flags.doping},
@@ -785,6 +798,7 @@ const ACHIEVEMENTS=[
 function loadAchv(){try{return new Set(JSON.parse(localStorage.getItem("twlife_achv")||"[]"));}catch(e){return new Set();}}
 function saveAchv(set){try{localStorage.setItem("twlife_achv",JSON.stringify([...set]));}catch(e){}}
 const ACTIONS=[
+  {id:"workout",icon:"🏋️",t:"去健身／養生",cond:S=>S.age>=16&&S.stateOverride!=="服刑中",act:S=>{let gain=Math.max(1,Math.round((88-S.stats.con)*0.12));if(S.age>=60)gain=Math.max(1,gain-1);S.skills.ath=Math.min(skCap("ath"),skXp("ath")+1);S.health=clamp((S.health||50)+2,0,100);return{log:"你上健身房重訓、規律作息、早睡早起，體態與精神都好了起來。",d:[...inc(S,{con:gain,happy:2}),...money(S,-30000)]};}},
   {id:"pursue",icon:"❤️",t:"追求心儀對象",cond:S=>S.rel==="單身"&&S.age>=16,act:S=>{let ok=chance(S,0.28+S.stats.chr*0.005);if(ok)S.rel="交往中";return{log:ok?"你鼓起勇氣追求，成功交往了！":"你被發了好人卡…",d:inc(S,ok?{happy:6}:{happy:-3})};}},
   {id:"marry",icon:"💍",t:"向對象求婚",cond:S=>S.rel==="交往中"&&S.age>=20,act:S=>{S.rel="已婚";mile(S,"💍","結婚了");return{log:"你求婚成功，步入禮堂！",d:[...inc(S,{happy:10}),...money(S,-500000)]};}},
   {id:"divorce",icon:"💔",t:"提出離婚",cond:S=>S.rel==="已婚",act:S=>{S.rel="離婚";return{log:"你提出離婚，結束了這段婚姻。",d:[...inc(S,{happy:-6}),...money(S,-800000)]};}},
@@ -799,7 +813,7 @@ const ACTIONS=[
   {id:"sellLong",icon:"📤",t:"賣出持股（獲利了結）",cond:S=>S.port>50000,act:S=>{let v=S.port;S.money+=v;S.port=0;S.flags.dca=false;return{log:"你出清持股，"+fmtMoney(v)+" 全部落袋為安。",d:inc(S,{happy:3})};}},
   {id:"crypto",icon:"🪙",t:"買加密貨幣",cond:S=>S.money>100000&&S.age>=18,act:S=>{let amt=Math.min(S.money*0.5,2000000);let moon=chance(S,0.3);return{log:moon?"幣圈上月球，翻倍出場！":"幣價崩盤，你的幣歸零了。",d:[...money(S,moon?Math.round(amt*2):-Math.round(amt*0.9)),...inc(S,{happy:moon?6:-6})]};}},
   {id:"sportscar",icon:"🏎️",t:"買跑車裝B",cond:S=>S.money>2000000&&S.age>=25,act:S=>({log:"你買了台名貴跑車，開出去回頭率破表，爽！",d:[...money(S,-2500000),...inc(S,{happy:8,chr:3})]})},
-  {id:"lottery",icon:"🎫",t:"簽一注大樂透",cond:S=>S.money>1000&&S.age>=18,act:S=>{if(chance(S,0.01)){S.flags.lotto=true;mile(S,"🎰","中了樂透頭獎！");return{log:"天啊！你中了樂透頭獎！",d:[...money(S,20000000),...inc(S,{happy:15})]};}if(chance(S,0.03))return{log:"中了小獎，加減賺！",d:[...money(S,100000),...inc(S,{happy:3})]};return{log:"槓龜。",d:money(S,-500)};}},
+  {id:"lottery",icon:"🎫",t:"簽一注大樂透",cond:S=>S.money>1000&&S.age>=18,act:S=>{if(lottoHit(S,0.01)){S.flags.lotto=true;mile(S,"🎰","中了樂透頭獎！");return{log:"天啊！你中了樂透頭獎！",d:[...money(S,20000000),...inc(S,{happy:15})]};}if(chance(S,0.03))return{log:"中了小獎，加減賺！",d:[...money(S,100000),...inc(S,{happy:3})]};return{log:"槓龜。",d:money(S,-500)};}},
   {id:"retire",icon:"🌅",t:"提早退休、告老還鄉",cond:S=>isSalaried(S)&&S.age>=55&&S.money>5000000,act:S=>{S.stateOverride="退休樂活";S.track="none";S.income=(S.flags.civil?400000:-250000);S.flags.left=true;mile(S,"🌅","提早退休");return{log:"你決定提早退休，把時間還給自己。",d:inc(S,{happy:8,con:1})};}},
   {id:"network",icon:"🤝",t:"拓展人脈（飯局／商會／校友會）",cond:S=>S.age>=22&&!downAndOut(S),act:S=>{let g=2+rnd(4);addConn(S,g);let cost=Math.min(Math.round(S.income*0.05)+20000,200000);return{log:`你出席飯局、商會與校友會，交際應酬拓展人脈（人脈 +${g}）。`,d:money(S,-cost)};}},
 ];
@@ -965,6 +979,8 @@ function setEnding(S,key,title,icon){ if(!S.ending) S.ending={key,title,icon}; }
 function jailTerm(S,years){S.stateOverride="服刑中";S.jailUntil=S.age+years;S.track="none";S.income=0;S.flags.jailed=true;}
 function jailForCorruption(S){jailTerm(S,6);S.flags.corruptJail=true;skillDecayAll(S,3);mile(S,"⛓️","貪污定罪，判刑 6 年、身敗名裂");return inc(S,{happy:-12,chr:-6});}
 function chance(S,p){return R()<clamp(p+(S.stats.luck-50)*0.004,0.01,0.99);}
+// 樂透頭獎專用：幸運僅小幅加成且封頂 2.5%，避免高運玩家中頭獎過於容易
+function lottoHit(S,base){return R()<clamp(base+(S.stats.luck-50)*0.0002,base*0.4,0.025);}
 function famFunds(){return S.fam?S.fam.funds:"none";}
 
 /* ==========================================================================
@@ -981,12 +997,7 @@ const EV=[
 }},
 
 /* ===== 童年（0-11）：家世決定教育資源 ===== */
-{id:"收驚",min:0,max:5,kind:"minor",w:12,text:"半夜哭鬧，阿嬤帶你去廟裡收驚。",eff:S=>inc(S,{faith:4,happy:2})},
-{id:"walk",min:1,max:2,once:true,w:40,kind:"minor",text:"你學會走路，跌跌撞撞探索世界。",eff:S=>inc(S,{happy:3})},
-{id:"sick_baby",min:0,max:5,kind:"minor",w:S=>S.stats.con<45?11:5,text:"你生了一場病，爸媽輪流顧到黑眼圈。",eff:S=>inc(S,{con:S.stats.con<=6?0:-3})},
 {id:"run",min:4,max:11,kind:"minor",w:20,text:"你整天在外奔跑玩耍，越長越勇。",eff:S=>inc(S,{con:3,happy:2})},
-{id:"kinder",min:3,max:5,once:true,w:44,text:"你上幼稚園了，第一天哭著找媽媽。",eff:S=>inc(S,{happy:2,chr:1})},
-{id:"first_day",min:6,max:6,once:true,w:60,text:"你背起書包上小學，展開人生新階段。",eff:S=>inc(S,{int:2,happy:2})},
 {id:"sibling",min:2,max:9,once:true,w:20,text:"家裡多了個弟弟／妹妹，你升格當哥哥／姊姊。",eff:S=>inc(S,{happy:2,con:1})},
 {id:"cousin",min:4,max:12,kind:"minor",w:12,text:"過年親戚聚會，你收紅包也被問成績。",eff:S=>[...inc(S,{happy:1}),...money(S,20000)]},
 {id:"scary",min:3,max:9,kind:"minor",w:8,text:"你怕黑怕鬼，晚上不敢自己睡。",eff:S=>inc(S,{happy:-1})},
@@ -1109,11 +1120,37 @@ const EV=[
 /* ===== 叛逆／8+9／底層路線 ===== */
 {id:"混幫派",min:16,max:30,w:S=>((S.flags.dropout||sk("street")>=2)&&!S.flags.gang)?22:0,cond:S=>S.flags.dropout||sk("street")>=2,choice:true,q:"大哥找你入夥「做事」，有錢賺但也有風險…",
   options:[
-    {t:"跟著大哥混",hint:"快錢＋危險",eff:S=>{S.flags.gang=true;mile(S,"🔪","加入幫派討生活");return [...inc(S,{con:4,happy:2,chr:2}),...money(S,200000)];},res:S=>"你成了道上兄弟。"},
+    {t:"跟著大哥混、入行黑道",hint:"快錢＋危險",eff:S=>{S.flags.gang=true;enterTrack(S,"gangster",true);mile(S,"🔪","加入幫派，從跑腿小弟做起");return [...inc(S,{con:4,happy:2,chr:2}),...money(S,200000)];},res:S=>"你成了道上兄弟。"},
     {t:"金盆洗手做正經事",hint:"改邪歸正",eff:S=>{S.flags.dropout=false;enterTrack(S,"service",true);mile(S,"🙏","洗心革面，重新做人");return inc(S,{happy:2});},res:S=>"你決定走回正途。"},
   ]},
 {id:"8+9漏氣",min:16,max:32,once:true,w:S=>((S.flags.gang||S.flags.dropout||sk("street")>=2)&&S.rel!=="已婚")?12:0,cond:S=>(S.flags.gang||S.flags.dropout||sk("street")>=2)&&S.rel!=="已婚",text:S=>"你借了大哥的賓士載妹兜風，開到加油站卻只敢喊「加 300」，女伴一臉嫌棄、覺得你有夠漏氣"+(S.rel==="交往中"?"，當場翻臉跟你分手。":"，下車後就再也不回你訊息了。"),eff:S=>{S.flags.gas300=true;if(S.rel==="交往中"){S.rel="單身";mile(S,"⛽","開大哥賓士加油只加 300 被嫌漏氣，慘遭分手");return inc(S,{happy:-6,chr:-2});}mile(S,"⛽","開大哥賓士加油只加 300，被妹嫌漏氣打槍");return inc(S,{happy:-4,chr:-1});}},
-{id:"混很大尾",min:22,max:48,once:true,w:S=>(S.flags.gang&&!S.flags.gangBoss)?16:0,cond:S=>S.flags.gang,text:"你在道上越混越有份量，手下一票小弟，出入有人喊你大哥。",eff:S=>{S.flags.gangBoss=true;S.stateOverride="幫派大哥";S.track="none";S.income=350000;mile(S,"🔫","成為呼風喚雨的黑道大哥");return [...inc(S,{chr:6,con:3,happy:4}),...money(S,1500000)];}},
+{id:"混很大尾",min:22,max:55,once:true,w:S=>(S.flags.gang&&!S.flags.gangBoss&&(S.track!=="gangster"||S.rank>=2))?16:0,cond:S=>S.flags.gang&&(S.track!=="gangster"||S.rank>=2),text:"你在道上越混越有份量，手下一票小弟，出入有人喊你大哥。",eff:S=>{S.flags.gangBoss=true;S.stateOverride="幫派大哥";S.track="none";S.income=600000;mile(S,"🔫","成為呼風喚雨的黑道大哥");return [...inc(S,{chr:6,con:3,happy:4}),...money(S,3000000)];}},
+/* ===== 黑道職涯：跑腿小弟 → 角頭 → 堂主（→ 大哥），可漂白從政、也可金盆洗手 ===== */
+{id:"黑道上位",min:18,max:52,w:S=>(S.track==="gangster"&&S.rank<2&&(S.age-S.trackStart)>=2)?85:0,cond:S=>S.track==="gangster"&&S.rank<2,text:"你在道上拚輸贏、罩兄弟、搶地盤，名號一天天響亮。",eff:S=>{const nx=TRACKS.gangster.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.34+sk("street")*0.06+(S.stats.con-55)*0.006)){S.rank++;S.income=nx.income;mile(S,"🔪","打出名號，升格為「"+nx.t+"」");return inc(S,{chr:3,con:1,happy:3});}return inc(S,{happy:-2,con:-1});}},
+{id:"收保護費",min:18,max:58,w:S=>(S.track==="gangster")?16:0,cond:S=>S.track==="gangster",text:"你替商家「喬事情」、圍事、收保護費，店家們乖乖上繳「規費」。",eff:S=>[...inc(S,{chr:1,happy:1}),...money(S,400000)]},
+{id:"經營八大",min:22,max:58,once:true,w:S=>(S.track==="gangster"&&S.rank>=1)?14:0,cond:S=>S.track==="gangster"&&S.rank>=1,choice:true,q:"你有機會頂下一間酒店／地下賭場／地下錢莊來經營，金流龐大但也是警方眼中釘…",
+  options:[
+    {t:"接手經營、大撈特撈",hint:"暴利＋被抄風險",eff:S=>{S.flags.vice=true;schedule(S,2+rnd(4),"chain_viceRaid");return [...inc(S,{happy:3}),...money(S,3000000)];},res:S=>"金流像水一樣進來，你也上了警方名單。"},
+    {t:"這太招搖，不碰",hint:"悶聲發財就好",eff:S=>inc(S,{happy:-1}),res:S=>"你選擇低調。"},
+  ]},
+{id:"chain_viceRaid",chain:true,once:true,text:"警方大規模掃黑掃黃，你的酒店／賭場被抄，金雞母沒了、還吃上官司。",eff:S=>{let loss=Math.min(Math.max(1000000,Math.round(Math.max(0,S.money)*0.3)),8000000);if(chance(S,0.45)){jailTerm(S,3);S.flags.jailed=true;mile(S,"⛓️","經營八大被抄，判刑入獄");}else mile(S,"🚔","地下事業被抄，損失慘重");return [...inc(S,{happy:-8,chr:-2}),...money(S,-loss)];}},
+{id:"暴力討債",min:18,max:55,once:true,w:S=>(S.track==="gangster")?12:0,cond:S=>S.track==="gangster",choice:true,q:"錢莊委託你去「討一筆債」——潑漆、恐嚇、上門要人，抽成優渥…",
+  options:[
+    {t:"接下、該硬就硬",hint:"賺錢但可能出事",eff:S=>{if(chance(S,0.25)){jailTerm(S,2);S.flags.jailed=true;mile(S,"⛓️","暴力討債鬧出傷害案，被逮入獄");return inc(S,{happy:-6,chr:-2});}return [...inc(S,{chr:1}),...money(S,600000)];},res:S=>S.stateOverride==="服刑中"?"這次玩過頭，你進去了。":"對方乖乖還錢，你抽了一筆。"},
+    {t:"手段別太過火",hint:"少賺求穩",eff:S=>[...inc(S,{happy:1}),...money(S,200000)],res:S=>"你留了三分餘地。"},
+  ]},
+{id:"圍標工程",min:26,max:60,once:true,w:S=>(S.track==="gangster"&&S.rank>=2)?12:0,cond:S=>S.track==="gangster"&&S.rank>=2,text:"你靠著地方勢力介入公共工程圍標、綁標，一標下來油水驚人。",eff:S=>{S.flags.bidRig=true;return [...inc(S,{chr:2,happy:2}),...money(S,5000000)];}},
+{id:"黑道漂白",min:30,max:58,once:true,w:S=>(S.track==="gangster"&&S.rank>=2&&sk("talk")>=1)?12:0,cond:S=>S.track==="gangster"&&S.rank>=2,choice:true,q:"你想洗白上岸——靠地方樁腳實力參選民代、脫下黑衣換上西裝…",
+  options:[
+    {t:"漂白參政、當地方民代",hint:"黑道漂白之路",eff:S=>{enterTrack(S,"politics",true);S.rank=1;S.income=TRACKS.politics.ranks[1].income;S.flags.washedWhite=true;S.connections=Math.min(100,S.connections+15);mile(S,"🗳️","黑道漂白，靠樁腳實力當上地方民代");return inc(S,{chr:3,happy:4});},res:S=>"你脫下黑衣、換上西裝，成了地方喬事的『民代』。"},
+    {t:"繼續當幕後大老",hint:"低調掌權",eff:S=>[...inc(S,{happy:2}),...money(S,1000000)],res:S=>"你在幕後呼風喚雨。"},
+  ]},
+{id:"仇家尋仇",min:18,max:55,once:true,w:S=>(S.track==="gangster"&&S.rank>=1)?9:0,cond:S=>S.track==="gangster",text:"仇家帶人堵你尋仇，一陣火拼刀光劍影…",eff:S=>{let bad=S.stats.con<50&&!S.flags.tough&&chance(S,0.35);if(bad){killLater(S,"你在仇家的尋仇中身中數刀，倒在血泊裡。");return inc(S,{con:-12,happy:-5});}return inc(S,{con:-5,chr:2,happy:-2});}},
+{id:"金盆洗手",min:35,max:60,once:true,w:S=>(S.track==="gangster")?30:0,cond:S=>S.track==="gangster",choice:true,q:"混了大半輩子、進出幾次牢，你動了洗手上岸、過安穩日子的念頭…",
+  options:[
+    {t:"金盆洗手、做點小生意",hint:"回歸正途",eff:S=>{enterTrack(S,"boss",true);S.flags.reform=true;mile(S,"🙏","洗心革面、金盆洗手，退出江湖");return inc(S,{happy:6});},res:S=>"你用積蓄開了間店，過起平凡日子。"},
+    {t:"人在江湖、身不由己",hint:"繼續混",eff:S=>inc(S,{happy:-2,con:-1}),res:S=>"你發現自己已經回不了頭。"},
+  ]},
 {id:"販毒",min:20,max:50,w:S=>(S.flags.gang&&!S.flags.dealDrug)?12:0,cond:S=>S.flags.gang,choice:true,q:"上游要你接「送貨」的線——販毒，暴利但這是唯一死刑等級的重罪…",
   options:[
     {t:"接下這條金雞母",hint:"暴利＋重刑風險",eff:S=>{S.flags.dealDrug=true;return [...inc(S,{happy:2}),...money(S,3000000)];},res:S=>"錢像流水進來，你卻夜夜難眠。"},
@@ -1325,7 +1362,7 @@ const EV=[
   mile(S,"🏳️",heavy?"車貸繳不出來、車被拖走，成了傳說中的『全額貸戰士』":"車貸繳不出來，車被拖吊法拍");
   return [...inc(S,{happy:-7,chr:-2}),...money(S,-loss)];
 }},
-{id:"樂透",min:20,max:82,kind:"minor",w:12,text:"你順手買了張大樂透／刮刮樂。",eff:S=>{if(chance(S,0.008)){S.flags.lotto=true;mile(S,"🎰","中了樂透頭獎！");return [...money(S,20000000),...inc(S,{happy:15})];}if(chance(S,0.02))return [...money(S,300000),...inc(S,{happy:4})];if(chance(S,0.12))return [...money(S,15000),...inc(S,{happy:1})];return money(S,-300);}},
+{id:"樂透",min:20,max:82,kind:"minor",w:12,text:"你順手買了張大樂透／刮刮樂。",eff:S=>{if(lottoHit(S,0.008)){S.flags.lotto=true;mile(S,"🎰","中了樂透頭獎！");return [...money(S,20000000),...inc(S,{happy:15})];}if(chance(S,0.02))return [...money(S,300000),...inc(S,{happy:4})];if(chance(S,0.12))return [...money(S,15000),...inc(S,{happy:1})];return money(S,-300);}},
 
 /* ===== 宮廟迷信 ===== */
 {id:"拜拜",min:16,max:90,kind:"minor",w:16,text:"逢年過節你到廟裡拜拜、點光明燈、安太歲。",eff:S=>[...inc(S,{faith:4,happy:2}),...money(S,-3000)]},
@@ -1725,7 +1762,7 @@ const EV=[
     {t:"硬撐，別人不懂",hint:"惡化風險",eff:S=>{S.flags.dep=true;return inc(S,{happy:-8,con:-3});},res:S=>"你一個人硬扛，越陷越深。"},
   ]},
 {id:"學業壓力",min:14,max:18,w:S=>((sk("acad")>=1||S.flags.hsTop)&&S.stats.happy<55)?14:0,cond:S=>!S.left,text:"升學壓力壓得你喘不過氣，你懷疑讀書的意義。",eff:S=>inc(S,{happy:-5,con:-2})},
-{id:"父母重病",min:30,max:62,once:true,w:S=>18,cond:S=>S.bg&&S.bg.inherit>=0,choice:true,q:"父母突然罹患重病，龐大的醫藥費壓在你肩上…",
+{id:"父母重病",min:30,max:62,once:true,w:S=>18,cond:S=>S.fam&&S.fam.inherit>=0,choice:true,q:"父母突然罹患重病，龐大的醫藥費壓在你肩上…",
   options:[
     {t:"傾家蕩產也要救",hint:"孝心＋巨額支出",eff:S=>{S.money-=Math.min(Math.max(S.money*0.5,800000),4000000);return inc(S,{happy:-4,con:-2});},res:S=>"你花光積蓄，只求盡孝。"},
     {t:"力有未逮，保守治療",hint:"愧疚",eff:S=>{S.money-=300000;return inc(S,{happy:-8});},res:S=>"你心裡有個永遠的結。"},
@@ -2136,7 +2173,7 @@ const EV=[
 {id:"老番顛",min:96,max:122,w:S=>(S.health||50)<45?12:5,text:"你偶爾忘東忘西、認錯人，家人半哄半勸，你自己倒是樂得自在。",eff:S=>inc(S,{happy:-2,int:-1})},
 {id:"破紀錄關注",min:116,max:122,w:30,text:"你的年齡逼近台灣最高齡紀錄，人口學者與媒體爭相研究你的長壽基因。",eff:S=>inc(S,{happy:6,chr:3})},
 {id:"最高齡人瑞",min:120,max:122,once:true,kind:"main",w:40,text:"你成了全台最高齡的傳奇人瑞，連國際媒體都來朝聖，寫下台灣的長壽紀錄。",eff:S=>{S.flags.oldestRecord=true;mile(S,"🏅","登上台灣最高齡人瑞，寫下歷史紀錄");return inc(S,{happy:12,chr:4});}},
-{id:"立遺囑",min:78,max:122,once:true,w:S=>(netWorth(S)>1500000)?15:0,cond:S=>netWorth(S)>1000000,choice:true,q:"年事已高，律師建議你及早立遺囑、安排遺產，免得子女日後爭產…",
+{id:"遺產爭產",min:78,max:122,once:true,w:S=>(netWorth(S)>1500000)?15:0,cond:S=>netWorth(S)>1000000,choice:true,q:"年事已高，律師提醒你把遺產分配交代清楚，免得子女日後爭產鬧上法院…",
   options:[
     {t:"公平分配、白紙黑字寫清楚",hint:"家和萬事興",eff:S=>{S.flags.willMade=true;return inc(S,{happy:4});},res:S=>"你把身後事交代得清清楚楚，了無牽掛。"},
     {t:"不想面對，拖著再說",hint:"埋下爭產隱患",eff:S=>inc(S,{happy:-2}),res:S=>"你把這事一延再延。"},
@@ -2396,7 +2433,8 @@ const EV=[
 
 /* ===== B. 統一發票 · 節慶 · 台灣時事梗 ===== */
 {id:"統一發票",min:8,max:95,kind:"minor",w:14,text:"對統一發票的時刻到了！你屏息核對號碼…",eff:S=>{let r=R();if(r<0.0005){S.flags.lotto=true;mile(S,"🧾","發票中千萬特別獎！");return [...money(S,10000000),...inc(S,{happy:15})];}if(r<0.02)return [...money(S,40000),...inc(S,{happy:5})];if(r<0.18)return [...money(S,200),...inc(S,{happy:2})];return inc(S,{happy:-1});}},
-{id:"過年",min:5,max:95,kind:"minor",w:12,text:"過年了！大掃除、貼春聯、圍爐守歲、走春拜年，紅包收發之間又老了一歲。",eff:S=>{let net=(S.age<22?30000:-20000);return [...inc(S,{happy:3}),...money(S,net)];}},
+{id:"過年",min:5,max:95,kind:"minor",w:12,text:"過年了！大掃除、貼春聯、圍爐守歲、走春拜年，紅包收發之間又老了一歲。",eff:S=>{const rp={gold:80000,rich:40000,mid:15000,work:8000,poor:2000};let net=(S.age<22?(rp[S.fam&&S.fam.id]||15000):-20000);return [...inc(S,{happy:3}),...money(S,net)];}},
+{id:"家裡金援",min:20,max:60,once:false,w:S=>(S.fam&&S.fam.net&&S.money<0&&!S.flags.gang)?15:0,cond:S=>S.fam&&S.fam.net&&S.money<0,text:"你手頭吃緊、周轉不靈，家裡二話不說幫你補上缺口——有個富爸媽，跌倒了也有人接。",eff:S=>{let help=Math.min(-S.money+800000,4000000);return [...money(S,help),...inc(S,{happy:3})];}},
 {id:"媽祖遶境",min:10,max:90,kind:"minor",w:8,text:"你跟著大甲媽祖遶境進香，走了好幾天鐵腿，但心靈無比平靜。",eff:S=>{S.stats.faith=clamp(S.stats.faith+4,0,100);return inc(S,{con:1,happy:3});}},
 {id:"中元普渡",min:12,max:90,kind:"minor",w:7,text:"中元普渡，你準備滿桌供品拜好兄弟，順便把要下架的零食全掃了。",eff:S=>[...inc(S,{faith:2,happy:1}),...money(S,-5000)]},
 {id:"排隊搶購",min:12,max:80,kind:"minor",w:8,text:"限量聯名／蛋塔／衛生紙之亂，你也跟著排了兩小時，買到有種莫名成就感。",eff:S=>inc(S,{happy:1,con:-1})},
@@ -2505,7 +2543,17 @@ function generateChildhood(){
   rollSkillCaps(S); // 先天潛力上限
   // 童年際遇（0–6）
   S.childhood=[S.region.kid];
-  for(const c of CHILD_TRAITS){ if(R()<c.p(S)){ c.eff(S); S.childhood.push(typeof c.nm==="function"?c.nm(S):c.nm); } }
+  const usedGrp={};
+  for(const c of CHILD_TRAITS){ if(c.grp&&usedGrp[c.grp])continue; if(R()<c.p(S)){ c.eff(S); S.childhood.push(typeof c.nm==="function"?c.nm(S):c.nm); if(c.grp)usedGrp[c.grp]=true; } }
+  // 童年成長里程碑（0–6，依年齡順序併入回顧）
+  const CHILD_EVENTS=[
+    {p:S=>0.85, nm:"你學會走路，跌跌撞撞探索世界。", eff:S=>inc(S,{happy:3})},
+    {p:S=>S.stats.con<45?0.5:0.2, nm:"你生了一場病，爸媽輪流顧到黑眼圈。", eff:S=>inc(S,{con:S.stats.con<=6?0:-3})},
+    {p:S=>0.3, nm:"半夜哭鬧，阿嬤帶你去廟裡收驚。", eff:S=>inc(S,{faith:4,happy:2})},
+    {p:S=>0.55, nm:"你上幼稚園了，第一天哭著找媽媽。", eff:S=>inc(S,{happy:2,chr:1})},
+    {p:S=>0.9, nm:"你背起書包上小學，展開人生新階段。", eff:S=>inc(S,{int:2,happy:2})},
+  ];
+  for(const c of CHILD_EVENTS){ if(R()<c.p(S)){ c.eff(S); S.childhood.push(c.nm); } }
   // 童年若已練出專長，不可超過先天上限
   for(const sd of SKILLS)if(skXp(sd.k)>skCap(sd.k))S.skills[sd.k]=skCap(sd.k);
   // 起始健康度：以體質為底（先天健壯 vs 體弱多病）
