@@ -567,9 +567,19 @@ const TRACKS={
     {t:"職業戰隊主力",income:2000000,y:2,req:{int:60}},
     {t:"世界冠軍選手",income:9000000,y:5,req:{int:70}},
   ]},
+  insurance:{nm:"保險業務",ranks:[
+    {t:"保險業務員",income:480000},
+    {t:"資深業務／單位主管",income:1250000,y:4,req:{chr:58}},
+    {t:"通訊處經理／MDRT",income:3600000,y:11,req:{chr:68,int:55}},
+  ]},
+  realtor:{nm:"房仲代銷",ranks:[
+    {t:"房仲業務",income:520000},
+    {t:"店長／金牌業務",income:1500000,y:4,req:{chr:60}},
+    {t:"加盟店老闆／代銷紅牌",income:4200000,y:11,req:{chr:68,int:58}},
+  ]},
 };
-const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6,baseball:7,esports:6};
-const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀",baseball:"⚾",esports:"🎮"};
+const CAREER_PRESTIGE={none:0,student:0,gig:1,service:2,blue:3,office:4,civil:4,freelance:3,tech:6,boss:7,pro:8,star:8,politics:8,mil:5,teach:5,chef:4,design:5,farm:4,creator:6,cheer:6,baseball:7,esports:6,insurance:4,realtor:5};
+const TRACK_ICON={tech:"💻",office:"💼",civil:"🍚",blue:"🔧",service:"🧋",pro:"⚕️",boss:"🚀",star:"🎤",politics:"🗳️",mil:"🎖️",teach:"👩‍🏫",chef:"👨‍🍳",design:"🎨",farm:"🌾",freelance:"🧑‍💻",gig:"🛵",creator:"📱",cheer:"🎀",baseball:"⚾",esports:"🎮",insurance:"📋",realtor:"🔑"};
 /* 出社會：職涯與「主專長＋學歷」綁定，大部分人順著專長走，少數斜槓 */
 function topSkill(S){let best=null,bx=SK_THRESH[0]-1;for(const sd of SKILLS){const x=skXp(sd.k);if(x>bx){bx=x;best=sd;}}return best;}
 function careerReady(S){
@@ -628,7 +638,7 @@ function enterTrack(S,id,silent){
   if(!silent) mile(S,"💼","出社會，成為「"+TRACKS[id].ranks[0].t+"」");
 }
 // 各職涯對應的「本職專長」——把骰子練進本職專長，升遷更快、也能補足能力門檻
-const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art",baseball:"ath",esports:"tech"};
+const TRACK_SKILL={tech:"tech",office:"biz",civil:"acad",blue:"ath",service:"talk",pro:"acad",boss:"biz",star:"art",creator:"art",politics:"talk",mil:"ath",teach:"acad",chef:"biz",design:"art",farm:"biz",freelance:"biz",gig:"street",cheer:"art",baseball:"ath",esports:"tech",insurance:"talk",realtor:"talk"};
 function tryPromote(S){
   if(S.stateOverride) return;
   if(["politics","star","creator","cheer","baseball","esports"].includes(S.track)) return; // 政界靠選舉、演藝／自媒體／啦啦隊／職棒／電競靠戰績人氣，不是年資升遷
@@ -751,6 +761,15 @@ const ACHIEVEMENTS=[
   {id:"ballBanned",icon:"📛",nm:"假球案禁賽",c:S=>S.flags.ballBanned},
   {id:"esportsPlayer",icon:"🎮",nm:"職業電競選手",c:S=>S.peakTrack==="esports"},
   {id:"esportChamp",icon:"🏆",nm:"電競世界冠軍",c:S=>S.flags.esportChamp},
+  {id:"insurance",icon:"📋",nm:"保險業務員",c:S=>S.peakTrack==="insurance"},
+  {id:"mdrt",icon:"🏆",nm:"百萬圓桌 MDRT",c:S=>S.flags.mdrt},
+  {id:"realtor",icon:"🔑",nm:"房仲代銷",c:S=>S.peakTrack==="realtor"},
+  {id:"piglet",icon:"🆘",nm:"柬埔寨豬仔生還者",c:S=>S.flags.pigletSurvived||S.flags.ransomed},
+  {id:"mule",icon:"💵",nm:"詐騙車手",c:S=>S.flags.mule},
+  {id:"cardSlave",icon:"💳",nm:"卡奴",c:S=>S.flags.cardSlave},
+  {id:"loanShark",icon:"🏃",nm:"地下錢莊受害者",c:S=>S.flags.loanShark||S.flags.onTheRun},
+  {id:"gas300",icon:"⛽",nm:"加油只加300",c:S=>S.flags.gas300},
+  {id:"fullLoanWarrior",icon:"🏳️",nm:"全額貸戰士",c:S=>S.flags.fullLoanWarrior},
   {id:"gyb",icon:"🔥",nm:"GYB 讚！",c:S=>S.flags.gyb},
   {id:"doping",icon:"💉",nm:"禁藥風波",c:S=>S.flags.doping},
   {id:"noodleMLB",icon:"🍜",nm:"牛肉麵賣回大聯盟",c:S=>S.milestones&&S.milestones.some(m=>/賣牛肉麵賣回大聯盟/.test(m.text))},
@@ -1092,6 +1111,7 @@ const EV=[
     {t:"跟著大哥混",hint:"快錢＋危險",eff:S=>{S.flags.gang=true;mile(S,"🔪","加入幫派討生活");return [...inc(S,{con:4,happy:2,chr:2}),...money(S,200000)];},res:S=>"你成了道上兄弟。"},
     {t:"金盆洗手做正經事",hint:"改邪歸正",eff:S=>{S.flags.dropout=false;enterTrack(S,"service",true);mile(S,"🙏","洗心革面，重新做人");return inc(S,{happy:2});},res:S=>"你決定走回正途。"},
   ]},
+{id:"8+9漏氣",min:16,max:32,once:true,w:S=>((S.flags.gang||S.flags.dropout||sk("street")>=2)&&S.rel!=="已婚")?12:0,cond:S=>(S.flags.gang||S.flags.dropout||sk("street")>=2)&&S.rel!=="已婚",text:S=>"你借了大哥的賓士載妹兜風，開到加油站卻只敢喊「加 300」，女伴一臉嫌棄、覺得你有夠漏氣"+(S.rel==="交往中"?"，當場翻臉跟你分手。":"，下車後就再也不回你訊息了。"),eff:S=>{S.flags.gas300=true;if(S.rel==="交往中"){S.rel="單身";mile(S,"⛽","開大哥賓士加油只加 300 被嫌漏氣，慘遭分手");return inc(S,{happy:-6,chr:-2});}mile(S,"⛽","開大哥賓士加油只加 300，被妹嫌漏氣打槍");return inc(S,{happy:-4,chr:-1});}},
 {id:"混很大尾",min:22,max:48,once:true,w:S=>(S.flags.gang&&!S.flags.gangBoss)?16:0,cond:S=>S.flags.gang,text:"你在道上越混越有份量，手下一票小弟，出入有人喊你大哥。",eff:S=>{S.flags.gangBoss=true;S.stateOverride="幫派大哥";S.track="none";S.income=350000;mile(S,"🔫","成為呼風喚雨的黑道大哥");return [...inc(S,{chr:6,con:3,happy:4}),...money(S,1500000)];}},
 {id:"販毒",min:20,max:50,w:S=>(S.flags.gang&&!S.flags.dealDrug)?12:0,cond:S=>S.flags.gang,choice:true,q:"上游要你接「送貨」的線——販毒，暴利但這是唯一死刑等級的重罪…",
   options:[
@@ -1285,6 +1305,25 @@ const EV=[
     {t:"貸款買房當屋奴",hint:"有殼但月月房貸",eff:S=>{let price=8000000+rnd(7000000);buyHome(S,price);mile(S,"🏠","買了人生第一間房");return inc(S,{happy:6});},res:S=>"有個家真好，但房貸壓得喘不過氣。"},
     {t:"一輩子租屋",hint:"錢拿去投資",eff:S=>inc(S,{happy:-1,int:1}),res:S=>"你當靈活的租屋族。"},
   ]},
+/* ===== 買車：現金／貸款／全額貸（還不出來→全額貸戰士） ===== */
+{id:"買車",min:22,max:55,once:true,w:S=>(employed(S)&&!S.flags.hasCar&&S.income>=400000)?14:0,cond:S=>employed(S)&&!S.flags.hasCar,choice:true,
+  q:S=>{S._carPrice=800000+rnd(1200000);return `你看上一台 ${fmtMoney(S._carPrice)} 的車，業務熱情推銷各種貸款方案，你打算怎麼付？`;},
+  options:S=>{const price=S._carPrice||1000000;const o=[];
+    if(S.money>=price)o.push({t:"現金一次付清",hint:"零負擔，荷包大失血",eff:S=>{S.flags.hasCar=true;S.money-=price;mile(S,"🚗","現金買了一台車");return inc(S,{happy:6,chr:2});},res:S=>"你帥氣付清、開走新車。"});
+    o.push({t:"付頭期＋分期貸款",hint:"月月要繳，但負擔還行",eff:S=>{S.flags.hasCar=true;S.money-=Math.round(price*0.3);S.flags.carLoan=true;schedule(S,3+rnd(3),"chain_carLoan");mile(S,"🚗","貸款買了一台車");return inc(S,{happy:6,chr:2});},res:S=>"你付了頭期款，剩下慢慢繳。"});
+    o.push({t:"0 頭期・全額貸！",hint:"當個全額貸戰士（還不出來就慘了）",eff:S=>{S.flags.hasCar=true;S.flags.fullLoan=true;schedule(S,2+rnd(3),"chain_carLoan");mile(S,"🚗","0 頭期全額貸，開走一台超出預算的車");return inc(S,{happy:8,chr:3});},res:S=>"零頭期就把車開走，帥是帥，帳單還在後頭。"});
+    o.push({t:"不買，搭捷運公車就好",hint:"務實省錢",eff:S=>inc(S,{happy:-1,int:1}),res:S=>"你決定當個大眾運輸族。"});
+    return o;}},
+{id:"chain_carLoan",chain:true,once:true,text:S=>"車貸繳了幾年，"+(S.flags.fullLoan?"零頭期全額貸的月付金像座大山壓著你…":"月付金雖然有點吃力，但還算撐得住…"),eff:S=>{
+  const heavy=!!S.flags.fullLoan;
+  const canPay=S.income>=(heavy?900000:500000)&&S.money>(heavy?-100000:-400000);
+  if(canPay)return [...inc(S,{happy:heavy?-1:1}),...money(S,heavy?-400000:-200000)];
+  if(heavy)S.flags.fullLoanWarrior=true;
+  S.flags.hasCar=false;
+  const loss=Math.min(Math.max(300000,Math.round((S._carPrice||1000000)*0.4)),1200000);
+  mile(S,"🏳️",heavy?"車貸繳不出來、車被拖走，成了傳說中的『全額貸戰士』":"車貸繳不出來，車被拖吊法拍");
+  return [...inc(S,{happy:-7,chr:-2}),...money(S,-loss)];
+}},
 {id:"樂透",min:20,max:82,kind:"minor",w:12,text:"你順手買了張大樂透／刮刮樂。",eff:S=>{if(chance(S,0.008)){S.flags.lotto=true;mile(S,"🎰","中了樂透頭獎！");return [...money(S,20000000),...inc(S,{happy:15})];}if(chance(S,0.02))return [...money(S,300000),...inc(S,{happy:4})];if(chance(S,0.12))return [...money(S,15000),...inc(S,{happy:1})];return money(S,-300);}},
 
 /* ===== 宮廟迷信 ===== */
@@ -1520,6 +1559,66 @@ const EV=[
   options:[
     {t:"轉當教練／分析師",hint:"留在電競圈",eff:S=>{enterTrack(S,"freelance",true);mile(S,"🎮","選手引退，轉任電競教練／分析師");return inc(S,{happy:4});},res:S=>"你把經驗傳給新生代。"},
     {t:"全職當遊戲實況主／YouTuber",hint:"把人氣變現",eff:S=>{enterTrack(S,"creator",true);S.rank=1;S.income=TRACKS.creator.ranks[1].income;mile(S,"📱","退役後轉當全職遊戲實況主");return inc(S,{happy:5});},res:S=>"你把選手粉絲帶進直播間。"},
+  ]},
+/* ===== 保險業務員：人情保單、業績壓力、增員、MDRT ===== */
+{id:"入行保險",min:22,max:48,once:true,w:S=>(["service","gig","office","freelance","none"].includes(S.track)||S.flags.jobless)?9:0,cond:S=>!["insurance","realtor"].includes(S.track)&&S.track!=="student"&&employed(S),choice:true,q:"親戚／學長姊揪你「進來一起做」，保險公司開出高獎金、時間自由的大餅…",
+  options:[
+    {t:"入行賣保險、拚業績",hint:"口才＋人脈之路，收入靠佣金",eff:S=>{enterTrack(S,"insurance",true);mile(S,"📋","轉行當保險業務員");return inc(S,{chr:2,happy:2});},res:S=>"你披上西裝、開始拉保單。"},
+    {t:"婉拒，怕做人情生意",hint:"維持現職",eff:S=>inc(S,{happy:1}),res:S=>"你決定不淌這行水。"},
+  ]},
+{id:"人情保單",min:22,max:60,w:S=>(S.track==="insurance")?16:0,cond:S=>S.track==="insurance",choice:true,q:"月底業績還差一點，你盯上了親友的口袋——要不要「拜託」他們捧場買張保單？",
+  options:[
+    {t:"開口拜託親友捧場",hint:"衝業績，但欠人情、傷感情",eff:S=>{S.connections=Math.max(0,S.connections-3);return [...inc(S,{happy:-2}),...money(S,250000)];},res:S=>"親友礙於情面簽了單，你心裡也不是滋味。"},
+    {t:"靠專業陌生開發",hint:"辛苦但問心無愧",eff:S=>{S.connections=Math.min(100,S.connections+3);return [...inc(S,{chr:2,con:-1}),...money(S,120000)];},res:S=>"你跑陌生客戶跑到鐵腿，但踏實。"},
+  ]},
+{id:"增員拉下線",min:24,max:58,once:true,w:S=>(S.track==="insurance"&&S.rank>=1)?12:0,cond:S=>S.track==="insurance",text:"主管要你「增員」——拉人進來當下線，你的收入就多一份組織獎金。你開始到處找人「一起打拚」。",eff:S=>{S.connections=Math.min(100,S.connections+5);return [...inc(S,{chr:2,happy:1}),...money(S,300000)];}},
+{id:"業績壓力",min:22,max:58,kind:"minor",w:S=>(S.track==="insurance"||S.track==="realtor")?14:0,cond:S=>S.track==="insurance"||S.track==="realtor",text:"月底衝業績、早會喊口號、被主管盯 KPI，你壓力大到失眠、假日也在跑客戶。",eff:S=>inc(S,{con:-2,happy:-3})},
+{id:"MDRT",min:28,max:62,once:true,w:S=>(S.track==="insurance"&&S.rank>=2)?24:0,cond:S=>S.track==="insurance"&&S.rank>=2,text:"你業績亮眼，達成國際百萬圓桌會員（MDRT），上台領獎、出國開會，成了公司的招牌 Top Sales。",eff:S=>{S.flags.mdrt=true;mile(S,"🏆","登上保險界百萬圓桌 MDRT");return [...inc(S,{chr:4,happy:6}),...money(S,800000)];}},
+/* ===== 房仲／代銷：帶看、成交王、幽靈物件、房市泡沫 ===== */
+{id:"入行房仲",min:22,max:48,once:true,w:S=>(["service","gig","office","freelance","none"].includes(S.track))?9:0,cond:S=>!["insurance","realtor"].includes(S.track)&&S.track!=="student"&&employed(S),choice:true,q:"房仲公司大舉徵才，主打「成交一間抵你半年薪水」，你心動了…",
+  options:[
+    {t:"入行當房仲、拚成交",hint:"口才＋跑腿，獎金驚人也可能三餐不繼",eff:S=>{enterTrack(S,"realtor",true);mile(S,"🔑","轉行當房仲業務");return inc(S,{chr:2,happy:2});},res:S=>"你開始帶看、發傳單、洗街。"},
+    {t:"婉拒，房市水太深",hint:"維持現職",eff:S=>inc(S,{happy:1}),res:S=>"你決定不碰房仲這行。"},
+  ]},
+{id:"成交王",min:22,max:62,w:S=>(S.track==="realtor")?15:0,cond:S=>S.track==="realtor",text:"你談成一筆大案子，斡旋、議價、簽約一氣呵成，抱回一筆漂亮的成交獎金，登上店頭的業績紅榜！",eff:S=>[...inc(S,{chr:3,happy:5}),...money(S,900000)]},
+{id:"帶看跑斷腿",min:22,max:60,kind:"minor",w:S=>(S.track==="realtor")?14:0,cond:S=>S.track==="realtor",text:"你一天帶看八組客戶、發傳單洗街到深夜，結果全是只看不買的「奧客」，一毛佣金都沒進帳。",eff:S=>inc(S,{con:-2,happy:-3})},
+{id:"凶宅糾紛",min:24,max:62,once:true,w:S=>(S.track==="realtor"&&S.rank>=1)?9:0,cond:S=>S.track==="realtor",choice:true,q:"你手上一間物件其實是凶宅，屋主要你「別主動提」，買方也還沒問…",
+  options:[
+    {t:"隱瞞不說、先成交再說",hint:"賺佣金，但恐吃上官司",eff:S=>{let sued=chance(S,0.5);if(sued){S.money-=Math.min(Math.max(500000,Math.round(Math.max(0,S.money)*0.2)),3000000);mile(S,"⚖️","賣凶宅未告知遭求償，形象受損");return inc(S,{happy:-6,chr:-3});}return [...inc(S,{happy:1}),...money(S,600000)];},res:S=>"你賭買方查不到——成敗都在一念間。"},
+    {t:"據實告知、誠信第一",hint:"少賺但長久",eff:S=>{S.flags.honestAgent=true;return [...inc(S,{chr:2,happy:1}),...money(S,150000)];},res:S=>"你如實揭露，客戶反而更信任你。"},
+  ]},
+/* ===== 詐騙集團／柬埔寨豬仔：高薪陷阱、KK 園區、車手 ===== */
+{id:"柬埔寨高薪",min:18,max:35,once:true,w:S=>((S.money<300000||downAndOut(S)||!employed(S))&&!S.flags.piglet&&S.stateOverride!=="服刑中"&&S.stateOverride!=="海外流亡")?7:0,cond:S=>!S.flags.piglet&&S.stateOverride!=="服刑中"&&S.stateOverride!=="海外流亡",choice:true,q:"你在網路看到「柬埔寨高薪徵才、免經驗、日領上萬、包吃包住」的廣告，對方熱情又急著要你馬上飛過去…",
+  options:[
+    {t:"衝了！飛去海外賺大錢",hint:"天上不會掉餡餅…",eff:S=>{S.flags.piglet=true;S.stateOverride="海外淪陷";S.track="none";S.rank=0;S.income=0;schedule(S,1,"chain_pigFarm");mile(S,"✈️","被高薪廣告誘騙，飛往柬埔寨");return inc(S,{happy:2});},res:S=>"你興沖沖出了海關，卻不知道自己正走進陷阱。"},
+    {t:"這一定是詐騙，不去",hint:"守住小命",eff:S=>inc(S,{int:1,happy:1}),res:S=>"你認出這是『豬仔』話術，慶幸沒上當。"},
+  ]},
+{id:"chain_pigFarm",chain:true,once:true,choice:true,q:"一下飛機護照就被沒收——你被賣進 KK 園區，被逼著坐在電腦前做詐騙，打罵、電擊樣樣來，想逃卻插翅難飛…",
+  options:[
+    {t:"拚死翻牆逃跑、向外求救",hint:"賭一把自由（有生命危險）",eff:S=>{if(chance(S,0.45)){S.flags.piglet=false;S.stateOverride=null;S.flags.pigletSurvived=true;enterTrack(S,"gig",true);mile(S,"🆘","從柬埔寨園區死裡逃生、獲救返國");return inc(S,{happy:6,con:-4,chr:2});}if(chance(S,0.4)){killLater(S,"你逃跑失敗，被凌虐致死、客死異鄉，家人連遺體都難尋。");return inc(S,{con:-10,happy:-10});}mile(S,"⛓️","逃跑失敗遭毒打，繼續被囚");return inc(S,{con:-8,happy:-8});},res:S=>S.flags.pigletSurvived?"你翻過高牆、聯繫上救援，撿回一條命回到台灣。":"你的逃亡以失敗與傷痕告終。"},
+    {t:"配合做詐騙、等家人湊錢贖",hint:"忍辱偷生",eff:S=>{S.flags.piglet=false;S.stateOverride=null;let ransom=Math.min(Math.max(1000000,Math.round(Math.max(0,S.money)*0.5)),5000000);S.money-=ransom;S.flags.ransomed=true;enterTrack(S,"gig",true);mile(S,"💸","家人湊出高額贖金，把你從園區贖回");return inc(S,{happy:-6,con:-3});},res:S=>"家人東湊西借付了贖金，你才得以脫身返台。"},
+  ]},
+{id:"當車手",min:18,max:40,once:true,w:S=>((S.flags.gang||downAndOut(S)||S.money<0)&&S.stateOverride!=="服刑中"&&!S.flags.piglet)?8:0,cond:S=>S.stateOverride!=="服刑中"&&!S.flags.piglet,choice:true,q:"有人找你當『車手』——負責到 ATM 提領被害人被騙的錢，抽成優渥、來錢超快…",
+  options:[
+    {t:"接了，反正來錢快",hint:"賺髒錢，被逮就完了",eff:S=>{S.flags.mule=true;if(chance(S,0.55)){jailTerm(S,2);S.flags.jailed=true;mile(S,"⛓️","當詐騙車手提款遭埋伏逮捕，判刑入獄");return inc(S,{happy:-8,chr:-3});}mile(S,"💵","當詐騙車手大撈一筆");return [...inc(S,{happy:1,chr:-2}),...money(S,1200000)];},res:S=>S.stateOverride==="服刑中"?"你在提款機前被埋伏的警察當場逮捕。":"你僥倖沒被逮，口袋麥克麥克。"},
+    {t:"這是害人的錢，不碰",hint:"守住良心",eff:S=>inc(S,{happy:1,chr:1}),res:S=>"你拒絕當詐騙集團的工具人。"},
+  ]},
+/* ===== 卡奴／地下錢莊：卡債循環、高利貸、討債、更生 ===== */
+{id:"辦現金卡",min:20,max:55,once:true,w:S=>((S.money<0||(S.money<200000&&S.stats.happy<50))&&!S.flags.cardDebt&&S.stateOverride!=="服刑中")?9:0,cond:S=>!S.flags.cardDebt&&S.stateOverride!=="服刑中",choice:true,q:"手頭緊、卡費快繳不出來，電視狂打「借錢免求人、現金卡馬上撥款」，你動了辦卡預借的念頭…",
+  options:[
+    {t:"辦現金卡、以卡養卡",hint:"先爽再說，利滾利很可怕",eff:S=>{S.flags.cardDebt=true;schedule(S,2+rnd(3),"chain_debtSpiral");return [...inc(S,{happy:3}),...money(S,300000)];},res:S=>"你刷卡預借度過難關，卻也踏上卡奴之路。"},
+    {t:"再苦也不碰循環利息",hint:"勒緊褲帶",eff:S=>inc(S,{happy:-2,int:1}),res:S=>"你告訴自己：欠卡債是無底洞。"},
+  ]},
+{id:"chain_debtSpiral",chain:true,once:true,text:"循環利息利滾利，你以卡養卡、拆東牆補西牆，債務像雪球越滾越大，成了名副其實的『卡奴』。",eff:S=>{S.flags.cardSlave=true;let d=Math.min(Math.max(500000,Math.round(Math.abs(S.money)*0.3+500000)),3000000);S.money-=d;mile(S,"💳","卡債利滾利失控，淪為卡奴");return inc(S,{happy:-6,con:-1});}},
+{id:"地下錢莊",min:22,max:60,once:true,w:S=>((S.flags.cardSlave||S.money<-500000)&&!S.flags.loanShark&&S.stateOverride!=="服刑中")?12:0,cond:S=>S.money<-200000&&!S.flags.loanShark&&S.stateOverride!=="服刑中",choice:true,q:"銀行不借了，走投無路的你看到「當日撥款、免聯徵」的小廣告——那是地下錢莊的高利貸…",
+  options:[
+    {t:"跟地下錢莊借錢",hint:"飲鴆止渴，利息高到嚇人",eff:S=>{S.flags.loanShark=true;schedule(S,1+rnd(2),"chain_debtCollect");return [...inc(S,{happy:2}),...money(S,500000)];},res:S=>"你簽了本票、拿了錢，也把自己交到討債集團手上。"},
+    {t:"寧可破產也不碰高利貸",hint:"斷尾求生",eff:S=>{S.flags.wantReset=true;return inc(S,{happy:-3});},res:S=>"你決定循正途處理債務。"},
+  ]},
+{id:"chain_debtCollect",chain:true,once:true,choice:true,q:"高利貸利滾利還不出來，討債集團找上門——潑漆、噴字、堵你家門、打電話恐嚇家人，日子過得膽戰心驚…",
+  options:[
+    {t:"聲請破產／債務更生",hint:"正途重來，信用留污點",eff:S=>{S.flags.loanShark=false;S.flags.bankrupt=true;S.money=Math.max(S.money,-200000);mile(S,"📉","走投無路聲請債務更生／破產，重新開始");return inc(S,{happy:2,chr:-1});},res:S=>"你走法律途徑更生，債務重整、慢慢還，總算能喘口氣。"},
+    {t:"半夜捲鋪蓋跑路",hint:"躲債、四處漂泊",eff:S=>{S.flags.onTheRun=true;S.stateOverride="跑路躲債";S.track="none";S.income=200000;mile(S,"🏃","欠債跑路，四處躲藏、有家歸不得");return inc(S,{happy:-5,con:-1});},res:S=>"你連夜搬家、換電話，從此過著躲債的日子。"},
   ]},
 {id:"衝刺IPO",min:35,max:70,once:true,w:S=>(S.track==="boss"&&!S.flags.ipoPending&&(S.age-S.trackStart)>=5)?42:0,cond:S=>S.track==="boss"&&!S.flags.ipoPending,choice:true,q:"公司經營有成，投資人與承銷商建議你衝刺 IPO 上市…",
   options:[
