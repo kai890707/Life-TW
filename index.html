@@ -299,19 +299,33 @@ function fmtDelta(n){const neg=n<0;let v=Math.abs(n);let s=v>=1e4?(Math.round(v/
 /* ---------- 縣市（影響資質、家世貧富、教育資源，各有風味） ----------
    wealthBias 正=偏富、負=偏窮；edu=教育資源；eco=在地就業機會傾向 ---------- */
 const REGIONS=[
-  {id:"tpe",nm:"台北",d:"天龍國：資源多、競爭大、房價高",mod:{int:6,chr:3,happy:-4},wealthBias:2,edu:2,tag:"天龍人",kid:"從小補習、才藝樣樣來，也早早嚐到競爭的壓力。"},
-  {id:"ntpc",nm:"新北",d:"蛋白區、通勤族大本營",mod:{con:2,happy:-1},wealthBias:0,edu:0,kid:"住在蛋白區，看著爸媽每天長途通勤打拚。"},
+  /* 北部 */
+  {id:"klu",nm:"基隆",d:"雨港：山海環抱、海味十足",mod:{con:3,happy:-3},wealthBias:-1,edu:0,kid:"雨都的孩子，在山海與廟口小吃間長大。"},
+  {id:"tpe",nm:"台北",d:"天龍國：資源匯聚、機會最多",mod:{int:6,chr:3,happy:-4},wealthBias:2,edu:2,tag:"天龍人",kid:"從小補習、才藝樣樣來，眼界開得早。"},
+  {id:"ntpc",nm:"新北",d:"生活便利、多元共融的大都會",mod:{con:2,happy:-1},wealthBias:0,edu:0,kid:"在生活機能滿分的城市長大，什麼都近。"},
   {id:"tyn",nm:"桃園",d:"工業航空城、機會多元",mod:{con:3},wealthBias:1,edu:0,kid:"在工業城長大，早早見識各行各業。"},
-  {id:"hsz",nm:"新竹",d:"竹科命：科技資源、工程師家庭",mod:{int:9},wealthBias:2,edu:2,tag:"科技囝仔",kid:"爸媽在竹科上班，你從小就摸電腦、玩程式。"},
-  {id:"txg",nm:"台中",d:"宜居、氣候好、房市熱",mod:{happy:5,chr:2},wealthBias:1,edu:1,kid:"在宜居的台中，日子過得舒服自在。"},
+  {id:"hsz",nm:"新竹市",d:"竹科命：科技資源、工程師家庭",mod:{int:9},wealthBias:2,edu:2,tag:"科技囝仔",kid:"爸媽在竹科上班，你從小就摸電腦、玩程式。"},
+  {id:"hsc",nm:"新竹縣",d:"竹北新貴＋客家庄：晴耕雨讀",mod:{int:5,con:2},wealthBias:1,edu:1,tag:"客家囝仔",kid:"客家庄長大，硬頸節儉、晴耕雨讀。"},
+  {id:"mia",nm:"苗栗",d:"苗栗國：山城客家、自成一格",mod:{con:5,int:1},wealthBias:-1,edu:-1,tag:"苗栗國",kid:"客家山城長大，硬頸又勤儉。"},
+  /* 中部 */
+  {id:"txg",nm:"台中",d:"宜居宜業、氣候舒適、生活愜意",mod:{happy:5,chr:2},wealthBias:1,edu:1,kid:"在宜居的台中，日子過得舒服自在。"},
   {id:"chw",nm:"彰化",d:"傳產、三合院、務實勤儉",mod:{con:5,int:1},wealthBias:-1,edu:0,kid:"三合院裡的孩子，從小幫忙農事、腳踏實地。"},
+  {id:"nan",nm:"南投",d:"山林茶鄉：日月潭、好山好茶",mod:{con:6,happy:4},wealthBias:-1,edu:-1,kid:"群山環繞、日月潭邊，在茶香裡長大。"},
+  {id:"yun",nm:"雲林",d:"農業首都：糧倉之鄉、純樸踏實",mod:{con:6,int:1},wealthBias:-2,edu:-1,kid:"農業大縣的孩子，跟著阿公阿嬤下田。"},
+  /* 南部 */
+  {id:"cyi",nm:"嘉義市",d:"木都：火雞肉飯、小而美",mod:{happy:4,chr:1},wealthBias:0,edu:0,kid:"小城步調悠閒，火雞肉飯配日常。"},
+  {id:"cyq",nm:"嘉義縣",d:"阿里山下：農業、純樸",mod:{con:6,happy:2},wealthBias:-2,edu:-2,kid:"阿里山下的農鄉孩子，純樸知足。"},
   {id:"tnn",nm:"台南",d:"美食古都、人情味濃",mod:{happy:7,con:2},wealthBias:0,edu:0,tag:"美食魂",kid:"從小吃遍巷弄美食，人情味把你養得樂天知足。"},
   {id:"khh",nm:"高雄",d:"海港、重工、講義氣",mod:{con:7,chr:2},wealthBias:0,edu:-1,tag:"海口人",kid:"海口人的孩子，講義氣、身體勇。"},
-  {id:"ilan",nm:"宜蘭",d:"好山好水、步調悠閒",mod:{happy:6,con:2},wealthBias:-1,edu:0,kid:"在好山好水間長大，個性溫和知足。"},
-  {id:"hun",nm:"花蓮",d:"後山：自然純樸、機會較少",mod:{con:10,happy:5},wealthBias:-2,edu:-1,tag:"山海之子",kid:"在山海之間奔跑長大，體格特別好，但資源不多。"},
-  {id:"ttt",nm:"台東",d:"慢活淨土、發展有限",mod:{con:9,happy:6},wealthBias:-2,edu:-2,kid:"與山海為伍，純真自在，但外面的世界很遠。"},
   {id:"ptn",nm:"屏東",d:"國境之南、農漁大縣",mod:{con:6,happy:3},wealthBias:-1,edu:-1,kid:"日頭赤炎炎，你在農漁之鄉曬得黝黑健康。"},
-  {id:"iso",nm:"澎金馬",d:"離島：堅韌獨立、資源最少",mod:{con:6,happy:1},wealthBias:-2,edu:-2,tag:"離島人",kid:"離島的孩子堅韌獨立，早早學會靠自己。"},
+  /* 東部 */
+  {id:"ilan",nm:"宜蘭",d:"好山好水、步調悠閒",mod:{happy:6,con:2},wealthBias:-1,edu:0,kid:"在好山好水間長大，個性溫和知足。"},
+  {id:"hun",nm:"花蓮",d:"後山：好山好水、自然純樸",mod:{con:10,happy:5},wealthBias:-2,edu:-1,tag:"山海之子",kid:"在山海之間奔跑長大，體格特別好。"},
+  {id:"ttt",nm:"台東",d:"慢活淨土：山海療癒、放鬆自在",mod:{con:9,happy:6},wealthBias:-2,edu:-2,kid:"與山海為伍，純真自在，心特別寬。"},
+  /* 離島 */
+  {id:"pho",nm:"澎湖",d:"菊島：離島觀光、海風堅韌",mod:{con:6,happy:3},wealthBias:-2,edu:-2,tag:"離島人",kid:"菊島的孩子，在海風中堅韌長大。"},
+  {id:"kmn",nm:"金門",d:"前線僑鄉：高粱、戰地風情",mod:{con:6,int:2},wealthBias:-1,edu:-1,tag:"離島人",kid:"前線僑鄉長大，聽著砲聲與高粱的故事。"},
+  {id:"lca",nm:"馬祖",d:"連江：閩東風情、藍眼淚故鄉",mod:{con:7,happy:2},wealthBias:-2,edu:-2,tag:"離島人",kid:"馬祖芹壁的孩子，與大海和藍眼淚為伍。"},
 ];
 /* ---------- 家世（隨機抽，有礦稀有；受出生縣市貧富影響） ---------- */
 const FAMILIES=[
