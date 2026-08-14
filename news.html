@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>更新公告｜鬼島人生模擬器</title>
+<meta name="description" content="鬼島人生模擬器（Ghost Island Life）從 1.0.0 到 1.7.0 的更新公告：新增保險、房仲、職棒、電競、啦啦隊等職業，以及詐騙集團、卡奴、政治、幣圈等台灣味故事線。">
+<meta name="keywords" content="鬼島人生模擬器,更新公告,改版,Ghost Island Life,台灣人生模擬遊戲,changelog">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#0d1018">
+<link rel="canonical" href="https://kai890707.github.io/Life-TW/news.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🏝️%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="鬼島人生模擬器">
+<meta property="og:title" content="更新公告｜鬼島人生模擬器">
+<meta property="og:description" content="從 1.0.0 到 1.7.0 的更新公告：新職業、新故事線、新功能一次看懂。">
+<meta property="og:url" content="https://kai890707.github.io/Life-TW/news.html">
+<meta property="og:image" content="https://kai890707.github.io/Life-TW/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="更新公告｜鬼島人生模擬器">
+<meta name="twitter:description" content="從 1.0.0 到 1.7.0 的更新公告：新職業、新故事線、新功能一次看懂。">
+<meta name="twitter:image" content="https://kai890707.github.io/Life-TW/og-image.png">
+<style>
+  :root{
+    --bg2:#0d1018;
+    --surface:#161a28; --surface2:#1d2236;
+    --line:#2b3150; --line2:#39406a;
+    --ink:#e9ecf6; --muted:#9aa2c2; --faint:#6b7398;
+    --accent:#7c8bff; --accent2:#57e0c8;
+    --gold:#ffd76b; --coral:#ff8a99; --good:#5ad07a;
+    --cjk:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0; font-family:var(--cjk); color:var(--ink); line-height:1.7;
+    background:
+      radial-gradient(1200px 760px at 50% -280px,#232a4d 0%,rgba(35,42,77,0) 62%),
+      var(--bg2);
+    background-color:var(--bg2);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{max-width:760px; margin:0 auto; padding:clamp(18px,4vw,40px) clamp(16px,4vw,28px) 72px;}
+
+  .nav{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;}
+  .back{display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:var(--muted); font-size:13px; font-weight:700;
+    padding:7px 13px; border:1px solid var(--line); border-radius:999px; background:var(--surface); transition:border-color .2s,color .2s;}
+  .back:hover{color:var(--ink); border-color:var(--line2);}
+  .navmark{font-size:12px; letter-spacing:2px; color:var(--faint); font-family:var(--mono);}
+
+  .hero{text-align:center; padding:22px 0 8px; opacity:0; animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards;}
+  .eyebrow{font-size:12px; letter-spacing:3px; color:var(--muted); font-weight:700;}
+  .eyebrow .en{color:var(--faint); font-family:var(--mono); letter-spacing:2px;}
+  h1{
+    margin:.28em 0 .12em; font-size:clamp(30px,8vw,50px); font-weight:800; letter-spacing:2px; text-wrap:balance;
+    background:linear-gradient(92deg,var(--accent) 0%,var(--accent2) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lede{color:var(--muted); font-size:clamp(14px,3.6vw,16px); margin:0 auto; max-width:34ch; text-wrap:balance;}
+  .verpill{
+    display:inline-flex; align-items:center; gap:8px; margin-top:16px;
+    font-family:var(--mono); font-size:14px; font-weight:700; letter-spacing:1px;
+    padding:7px 14px; border-radius:999px; color:#0b0e16;
+    background:linear-gradient(92deg,var(--accent2),var(--accent)); box-shadow:0 6px 22px rgba(124,139,255,.28);
+  }
+  .verpill .tag{font-family:var(--cjk); font-size:11px; background:rgba(11,14,22,.28); padding:2px 7px; border-radius:999px;}
+
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:30px 0 8px;
+    opacity:0; animation:rise .6s .12s cubic-bezier(.2,.7,.3,1) forwards;}
+  .stat{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 8px; text-align:center;}
+  .stat b{display:block; font-family:var(--mono); font-size:clamp(20px,5.5vw,27px); font-weight:800; font-variant-numeric:tabular-nums; color:var(--gold); line-height:1.1;}
+  .stat span{display:block; font-size:11px; color:var(--muted); margin-top:5px; letter-spacing:.5px;}
+  @media(max-width:460px){ .stats{grid-template-columns:repeat(2,1fr);} }
+
+  .timeline{margin-top:34px; position:relative;}
+  .timeline::before{content:""; position:absolute; left:7px; top:12px; bottom:24px; width:2px;
+    background:linear-gradient(180deg,var(--accent),var(--accent2) 40%,var(--line) 100%);}
+  .rel{position:relative; padding-left:34px; margin-bottom:26px; opacity:0; animation:rise .55s cubic-bezier(.2,.7,.3,1) forwards;}
+  .rel::before{content:""; position:absolute; left:0; top:5px; width:16px; height:16px; border-radius:50%;
+    background:var(--bg2); border:3px solid var(--accent2); box-shadow:0 0 0 4px rgba(87,224,200,.12);}
+  .rel.minor::before{border-color:var(--line2); box-shadow:none; width:14px; height:14px; left:1px; top:6px;}
+
+  .rhead{display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 12px; margin-bottom:4px;}
+  .ver{font-family:var(--mono); font-size:17px; font-weight:800; color:var(--accent); letter-spacing:.5px;}
+  .rtitle{font-size:18px; font-weight:800; letter-spacing:.5px;}
+  .rdate{font-family:var(--mono); font-size:12px; color:var(--faint); margin-left:auto;}
+  .latest{font-size:11px; font-weight:700; color:#0b0e16; background:var(--accent2); padding:2px 9px; border-radius:999px; letter-spacing:1px;}
+
+  .card{background:linear-gradient(180deg,var(--surface),var(--surface2)); border:1px solid var(--line); border-radius:16px; padding:16px 16px 6px; margin-top:10px;}
+  .grp{margin-bottom:12px;}
+  .glabel{display:inline-block; font-size:11px; font-weight:800; letter-spacing:1.5px; padding:3px 10px; border-radius:7px; margin-bottom:9px;}
+  .g-job{color:var(--accent2); background:rgba(87,224,200,.12); border:1px solid rgba(87,224,200,.3);}
+  .g-story{color:#aab4ff; background:rgba(124,139,255,.13); border:1px solid rgba(124,139,255,.3);}
+  .g-feat{color:var(--gold); background:rgba(255,215,107,.11); border:1px solid rgba(255,215,107,.28);}
+  .g-fix{color:var(--coral); background:rgba(255,138,153,.1); border:1px solid rgba(255,138,153,.26);}
+  ul{list-style:none; margin:0 0 4px; padding:0; display:flex; flex-direction:column; gap:8px;}
+  li{display:flex; gap:10px; font-size:14.5px;}
+  li .em{flex:none; width:22px; text-align:center; font-size:16px; line-height:1.55;}
+  li b{color:var(--ink); font-weight:700;}
+  li .d{color:var(--muted);}
+  .oneline{color:var(--muted); font-size:14px; margin:2px 0 4px;}
+  .oneline b{color:var(--ink);}
+
+  .cta{margin-top:14px; text-align:center; background:linear-gradient(180deg,var(--surface),var(--surface2));
+    border:1px solid var(--line); border-radius:18px; padding:26px 20px;}
+  .cta h2{margin:0 0 4px; font-size:20px; letter-spacing:1px;}
+  .cta p{margin:0 0 16px; color:var(--muted); font-size:14px;}
+  .play{display:inline-block; text-decoration:none; font-weight:800; letter-spacing:1px; font-size:16px;
+    color:#0b0e16; background:linear-gradient(92deg,var(--accent2),var(--accent)); padding:13px 30px; border-radius:12px;
+    box-shadow:0 8px 26px rgba(124,139,255,.3); transition:transform .08s ease, filter .2s;}
+  .play:hover{filter:brightness(1.06);} .play:active{transform:translateY(1px);}
+  .play:focus-visible{outline:2px solid var(--accent2); outline-offset:3px;}
+  .foot{text-align:center; color:var(--faint); font-size:12px; margin-top:22px; line-height:1.8;}
+  .foot a{color:var(--muted);}
+
+  @keyframes rise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
+  @media(prefers-reduced-motion:reduce){ *{animation:none!important;} .hero,.stats,.rel{opacity:1!important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="nav">
+    <a class="back" href="./">← 回到遊戲</a>
+    <span class="navmark">CHANGELOG</span>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">🏝️ 鬼島人生模擬器 &nbsp;<span class="en">GHOST ISLAND LIFE</span></div>
+    <h1>改版公告</h1>
+    <p class="lede">從 1.0.0 上線到現在，我們塞了這些新東西進你的人生 👇</p>
+    <div class="verpill">v1.7.0 <span class="tag">最新</span></div>
+  </header>
+
+  <section class="stats" aria-label="更新總覽數字">
+    <div class="stat"><b>+5</b><span>新職業</span></div>
+    <div class="stat"><b>20＋</b><span>新故事線</span></div>
+    <div class="stat"><b>30＋</b><span>新成就</span></div>
+    <div class="stat"><b>122</b><span>最高壽命</span></div>
+  </section>
+
+  <main class="timeline">
+
+    <article class="rel" style="animation-delay:.05s">
+      <div class="rhead"><span class="ver">v1.7.0</span><span class="latest">最新</span><span class="rtitle">職業與詐騙時事包</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-job">新職業</span>
+          <ul>
+            <li><span class="em">📋</span><span><b>保險業務員</b><span class="d"> — 人情保單、增員拉下線、拚上百萬圓桌 MDRT</span></span></li>
+            <li><span class="em">🔑</span><span><b>房仲／代銷</b><span class="d"> — 成交王上紅榜、帶看跑斷腿、凶宅糾紛</span></span></li>
+          </ul>
+        </div>
+        <div class="grp">
+          <span class="glabel g-story">新故事線</span>
+          <ul>
+            <li><span class="em">🎣</span><span><b>詐騙集團・柬埔寨豬仔</b><span class="d"> — 高薪陷阱、KK 園區、拚死逃生或家人湊贖金</span></span></li>
+            <li><span class="em">💳</span><span><b>卡奴・地下錢莊</b><span class="d"> — 卡債循環、高利貸、討債上門、更生或跑路</span></span></li>
+            <li><span class="em">🎖️</span><span><b>兵役大擴充</b><span class="d"> — 有錢人偽造免役、教召 14 天、逃兵海外流亡完整劇情</span></span></li>
+            <li><span class="em">⛽</span><span><b>8+9 加油 300</b><span class="d"> — 開大哥賓士載妹只加 300，被嫌漏氣慘遭分手</span></span></li>
+            <li><span class="em">🚗</span><span><b>買車全額貸</b><span class="d"> — 現金／分期／0 頭期全額貸；還不出來就變「全額貸戰士」</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel" style="animation-delay:.1s">
+      <div class="rhead"><span class="ver">v1.6.0</span><span class="rtitle">介面體驗升級</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-feat">功能・體驗</span>
+          <ul>
+            <li><span class="em">🎯</span><span><b>常駐志向進度條</b><span class="d"> — 遊玩時隨時看到人生目標達成到幾 %</span></span></li>
+            <li><span class="em">✨</span><span><b>數值變動閃動</b><span class="d"> — 顏值／體質／資產增減，加綠減紅一眼看懂</span></span></li>
+            <li><span class="em">🎲</span><span><b>三種操作辨識色</b><span class="d"> — 抉擇、特訓分骰、主動行動不再傻傻分不清</span></span></li>
+            <li><span class="em">🏷️</span><span><b>狀態標籤可點說明</b><span class="d"> — 專長顯示名稱，點一下跳出解釋</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel" style="animation-delay:.15s">
+      <div class="rhead"><span class="ver">v1.5.0</span><span class="rtitle">運動員與時事梗</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-job">新職業</span>
+          <ul>
+            <li><span class="em">⚾</span><span><b>職棒選手</b><span class="d"> — 選秀、旅外大聯盟、假球案、禁藥、牛肉麵賣回大聯盟逆襲</span></span></li>
+            <li><span class="em">🎮</span><span><b>電競選手</b><span class="d"> — 世界冠軍、GYB 戰隊、直播斗內、吃青春飯的引退</span></span></li>
+          </ul>
+        </div>
+        <div class="grp">
+          <span class="glabel g-story">新事件</span>
+          <ul>
+            <li><span class="em">🤝</span><span><b>死亡之握</b><span class="d"> — 和總統握手帶衰，錢莫名減少、惹上爭議</span></span></li>
+            <li><span class="em">🚑</span><span><b>立院打架</b><span class="d"> — 議場全武行，手被夾傷送醫</span></span></li>
+            <li><span class="em">😤</span><span><b>綜藝爆氣</b><span class="d"> — 一直輸被後輩虧，爆氣被冠「輸不起」封號</span></span></li>
+          </ul>
+        </div>
+        <div class="grp">
+          <span class="glabel g-fix">修復</span>
+          <p class="oneline">修正「當過總統又去選市長」的時間線矛盾、教召年齡（改為 24–37 歲）等問題。</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel" style="animation-delay:.2s">
+      <div class="rhead"><span class="ver">v1.4.0</span><span class="rtitle">活到人瑞</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-feat">調整</span>
+          <ul>
+            <li><span class="em">⏳</span><span><b>最高壽命 105 → 122 歲</b><span class="d"> — 對齊台灣戶政最高齡紀錄，養生的人生才碰得到</span></span></li>
+          </ul>
+        </div>
+        <div class="grp">
+          <span class="glabel g-story">新事件</span>
+          <ul>
+            <li><span class="em">🧓</span><span><b>高齡人瑞事件</b><span class="d"> — 重陽敬老金鎖片、首長祝壽、五代同堂、登上全台最高齡人瑞</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel" style="animation-delay:.25s">
+      <div class="rhead"><span class="ver">v1.3.0</span><span class="rtitle">啦啦隊與政壇</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-job">新職業</span>
+          <ul><li><span class="em">🎀</span><span><b>職業啦啦隊</b><span class="d"> — 選拔、人氣女神、應援爆紅、轉戰演藝</span></span></li></ul>
+        </div>
+        <div class="grp">
+          <span class="glabel g-story">新故事線</span>
+          <ul>
+            <li><span class="em">🌊</span><span><b>高雄市長線</b><span class="d"> — 上任高喊「高雄發大財」，支票跳票被罷免下台</span></span></li>
+            <li><span class="em">🗳️</span><span><b>政治線深化</b><span class="d"> — 里長樁腳、跑攤、賄選買票、質詢爆紅</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel" style="animation-delay:.3s">
+      <div class="rhead"><span class="ver">v1.2.x</span><span class="rtitle">縣市補齊與分享強化</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-feat">新增・調整</span>
+          <ul>
+            <li><span class="em">🗺️</span><span><b>出生縣市補齊台灣 22 縣市</b><span class="d"> — 新增基隆、苗栗、南投、雲林、嘉義⋯拆分澎湖／金門／馬祖</span></span></li>
+            <li><span class="em">🖼️</span><span><b>分享長圖大升級</b><span class="d"> — 補上曲線圖與完整結算，並修好 iOS 存不了檔的問題</span></span></li>
+          </ul>
+        </div>
+        <div class="grp">
+          <span class="glabel g-fix">修復</span>
+          <p class="oneline">修正重新投胎時卡在上一局結算畫面的問題。</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel" style="animation-delay:.35s">
+      <div class="rhead"><span class="ver">v1.1.0</span><span class="rtitle">更多故事線</span><span class="rdate">2026-08-14</span></div>
+      <div class="card">
+        <div class="grp">
+          <span class="glabel g-story">新故事線</span>
+          <ul>
+            <li><span class="em">🧧</span><span><b>生肖犯太歲／安太歲</b><span class="d"> — 本命年花錢消災，還是要鐵齒？</span></span></li>
+            <li><span class="em">🪙</span><span><b>幣圈韭菜線</b><span class="d"> — 歐印住套房、合約爆倉、交易所暴雷跑路</span></span></li>
+            <li><span class="em">🗳️</span><span><b>政治職涯線</b><span class="d"> — 從政、選議員、選立委、問鼎總統</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rel minor" style="animation-delay:.4s">
+      <div class="rhead"><span class="ver">v1.0.1</span><span class="rtitle">小修正</span><span class="rdate">2026-08-14</span></div>
+      <p class="oneline" style="padding-left:2px;">🎓 修正第一志願放榜的性別對應——男生上建中、女生上北一女。</p>
+    </article>
+
+  </main>
+
+  <section class="cta">
+    <h2>🎮 準備好投胎了嗎？</h2>
+    <p>免下載、免註冊，開網頁就能玩。</p>
+    <a class="play" href="./">立即遊玩 →</a>
+  </section>
+
+  <p class="foot">
+    <a href="./index.html">鬼島人生模擬器</a> · v1.0.0 首發於 2026-08-14 ·
+    <a href="https://github.com/kai890707/Life-TW">GitHub</a><br>
+    事件、人物、情節純屬虛構，僅供娛樂，與真實個人或團體無關。
+  </p>
+
+</div>
+</body>
+</html>

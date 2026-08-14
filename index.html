@@ -293,7 +293,7 @@
     </div>
   </div>
 
-  <div class="foot">靈感來自 yakyulife（棒球人生模擬器）· 純前端單機 · 事件純屬虛構娛樂</div>
+  <div class="foot"><a href="./news.html" style="color:var(--accent2);font-weight:700;text-decoration:none;">📢 更新公告</a> · 靈感來自 yakyulife（棒球人生模擬器）· 純前端單機 · 事件純屬虛構娛樂</div>
   <details class="seo-wrap"><summary>關於本遊戲 · 常見問題 FAQ</summary>
   <section class="seo-info" style="margin:4px auto 8px;color:var(--muted);font-size:13px;line-height:1.8;">
     <h2 style="font-size:15px;color:var(--txt);margin:18px 0 8px;letter-spacing:1px;">關於鬼島人生模擬器</h2>
@@ -554,7 +554,7 @@ const TRACKS={
   ]},
   cheer:{nm:"職業啦啦隊",ranks:[
     {t:"應援啦啦隊員",income:460000},
-    {t:"人氣看板女神",income:1500000,y:3,req:{chr:70}},
+    {t:S=>(S.sex==="女"||S.flags.cameOut)?"人氣看板女神":"人氣看板男神",income:1500000,y:3,req:{chr:70}},
     {t:"應援天花板／隊長",income:4500000,y:7,req:{chr:82}},
   ]},
   baseball:{nm:"職棒選手",ranks:[
@@ -630,7 +630,7 @@ function careerOptions(S){
   if(out.length<2)push("service");
   return out.slice(0,3);
 }
-function trackName(){ if(S.stateOverride) return S.stateOverride; const tr=TRACKS[S.track]; return tr?(tr.ranks[S.rank]||tr.ranks[0]).t:"無業"; }
+function trackName(){ if(S.stateOverride) return S.stateOverride; const tr=TRACKS[S.track]; if(!tr)return "無業"; const t=(tr.ranks[S.rank]||tr.ranks[0]).t; return typeof t==="function"?t(S):t; }
 function enterTrack(S,id,silent){
   S.track=id; S.rank=0; S.trackStart=S.age; S.income=TRACKS[id].ranks[0].income; S.stateOverride=null;
   S.flags.left=true; S.flags.careerStarted=true;  // 進入職場＝離開學生身分，升學事件不再觸發
@@ -754,7 +754,8 @@ const ACHIEVEMENTS=[
   {id:"polStar",icon:"📣",nm:"聲量政治明星",c:S=>S.flags.polStar},
   {id:"rekt",icon:"🥬",nm:"幣圈韭菜",c:S=>S.flags.rekt},
   {id:"cryptoRich",icon:"🪙",nm:"幣圈翻身",c:S=>S.flags.cryptoRich},
-  {id:"cheer",icon:"🎀",nm:"應援女神",c:S=>S.peakTrack==="cheer"},
+  {id:"cheer",icon:"🎀",nm:"應援女神",c:S=>S.peakTrack==="cheer"&&(S.sex==="女"||S.flags.cameOut)},
+  {id:"cheerM",icon:"💪",nm:"應援男神",c:S=>S.peakTrack==="cheer"&&S.sex==="男"&&!S.flags.cameOut},
   {id:"cheerViral",icon:"📣",nm:"應援爆紅",c:S=>S.flags.cheerStar},
   {id:"ballStar",icon:"⚾",nm:"職棒球星",c:S=>S.peakTrack==="baseball"},
   {id:"overseasBall",icon:"🌏",nm:"旅外球員",c:S=>S.flags.overseasBall},
@@ -1475,7 +1476,7 @@ const EV=[
     {t:"加入職業啦啦隊！",hint:"顏值＋舞蹈之路",eff:S=>{enterTrack(S,"cheer",true);mile(S,"🎀","加入職業啦啦隊，成為「應援啦啦隊員」");return inc(S,{chr:3,happy:5});},res:S=>"你站上應援台，鎂光燈與加油聲把你包圍。"},
     {t:"還是算了",hint:"低調過生活",eff:S=>inc(S,{happy:1}),res:S=>"你選擇平凡的生活。"},
   ]},
-{id:"應援之路",min:18,max:46,w:S=>(S.track==="cheer"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="cheer"&&S.rank<2,text:"應援台上你拚人氣、練舞、經營社群，粉絲一天天變多。",eff:S=>{const nx=TRACKS.cheer.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("art")*0.05+(S.stats.chr-65)*0.006)){S.rank++;S.income=nx.income;mile(S,"🎀","人氣爆棚，晉升為「"+nx.t+"」");return inc(S,{happy:7,chr:3});}return inc(S,{happy:-2,con:-1});}},
+{id:"應援之路",min:18,max:46,w:S=>(S.track==="cheer"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="cheer"&&S.rank<2,text:"應援台上你拚人氣、練舞、經營社群，粉絲一天天變多。",eff:S=>{const nx=TRACKS.cheer.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("art")*0.05+(S.stats.chr-65)*0.006)){S.rank++;S.income=nx.income;const nt=typeof nx.t==="function"?nx.t(S):nx.t;mile(S,"🎀","人氣爆棚，晉升為「"+nt+"」");return inc(S,{happy:7,chr:3});}return inc(S,{happy:-2,con:-1});}},
 {id:"應援爆紅",min:18,max:42,once:true,w:S=>(S.track==="cheer")?16:0,cond:S=>S.track==="cheer",text:"你的應援舞蹈被球迷剪成短影音瘋傳，一夜之間成為全網焦點，還登上運動版頭條。",eff:S=>{S.connections=Math.min(100,S.connections+8);S.flags.cheerStar=true;return inc(S,{chr:6,happy:6});}},
 {id:"球場開球",min:18,max:46,kind:"minor",w:S=>(S.track==="cheer")?14:0,cond:S=>S.track==="cheer",text:"你受邀在滿場球迷前開球、擔任應援主持，全場為你歡呼。",eff:S=>[...inc(S,{chr:2,happy:4}),...money(S,60000)]},
 {id:"代言接不完",min:20,max:46,w:S=>(S.track==="cheer"&&S.rank>=1)?14:0,cond:S=>S.track==="cheer"&&S.rank>=1,text:"人氣高漲，運動品牌、手搖飲、遊戲代言接到手軟。",eff:S=>[...inc(S,{happy:4}),...money(S,900000)]},
@@ -1824,7 +1825,7 @@ const EV=[
 {id:"撿到寶",min:16,max:80,kind:"minor",w:S=>2+Math.round(S.stats.luck*0.06),text:"你在二手市集／老家閣樓翻到值錢的骨董寶物。",eff:S=>[...inc(S,{happy:4}),...money(S,300000)]},
 {id:"買到假貨",min:22,max:70,kind:"minor",w:7,text:"你網購／買骨董收到假貨，錢打了水漂。",eff:S=>[...inc(S,{happy:-2}),...money(S,-40000)]},
 {id:"見到偶像",min:12,max:60,kind:"minor",w:7,text:"你在街頭巧遇心儀的偶像／名人，還要到了簽名合照！",eff:S=>inc(S,{happy:5})},
-{id:"出櫃",min:18,max:45,once:true,w:5,text:"你認清並接納了真實的自己，向世界出櫃，活得更自在。",eff:S=>inc(S,{happy:6})},
+{id:"出櫃",min:18,max:45,once:true,w:5,text:"你認清並接納了真實的自己，向世界出櫃，活得更自在。",eff:S=>{S.flags.cameOut=true;return inc(S,{happy:6});}},
 /* 天賦觸發的專屬際遇 */
 {id:"錦鯉發威",min:14,max:80,kind:"minor",w:S=>(S.talent&&S.talent.id==="koi")?12:0,cond:S=>S.talent&&S.talent.id==="koi",text:"錦鯉體質發威，你又中了小獎／抽中好康，好運擋不住。",eff:S=>[...inc(S,{happy:4}),...money(S,80000)]},
 {id:"大難不死",min:18,max:80,kind:"minor",w:S=>S.flags.tough?9:0,cond:S=>S.flags.tough,text:"一場致命意外，你竟毫髮無傷、大難不死——八字真的很硬。",eff:S=>inc(S,{happy:5,con:3,faith:2})},
