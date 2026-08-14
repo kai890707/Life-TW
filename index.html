@@ -658,6 +658,8 @@ const ACHIEVEMENTS=[
   {id:"beauty",icon:"🌸",nm:"顏值天花板",c:S=>S.peak.chr>=100&&(sk("art")>=2||S.flags.starface)},
   {id:"longlive",icon:"🧓",nm:"人瑞級長壽",c:S=>S.age>=98},
   {id:"supercent",icon:"🕯️",nm:"破紀錄超級人瑞",c:S=>S.age>=115},
+  {id:"fiveGen",icon:"👨‍👩‍👧‍👦",nm:"五代同堂",c:S=>S.flags.fiveGen},
+  {id:"oldestRecord",icon:"🏅",nm:"台灣最高齡紀錄",c:S=>S.flags.oldestRecord},
   {id:"youngdie",icon:"💀",nm:"英年早逝",c:S=>S.age<30},
   {id:"married",icon:"💍",nm:"白頭偕老",c:S=>S.rel==="已婚"&&S.age>=60},
   {id:"taida",icon:"👨‍🎓",nm:"教出台大生",c:S=>S.flags.taida},
@@ -1879,6 +1881,24 @@ const EV=[
 {id:"隱藏_富豪俱樂部",min:30,max:82,once:true,w:S=>(netWorth(S)>=300000000)?30:0,cond:S=>netWorth(S)>=300000000,text:"你的身價驚動了某神祕富豪俱樂部，燙金邀請函送上門，你自此躋身頂級人脈圈。",eff:S=>{addConn(S,30);return inc(S,{happy:8,chr:3});}},
 {id:"隱藏_谷底翻身",min:35,max:72,once:true,w:S=>(S.wealthMile&&S.wealthMile.broke&&netWorth(S)>10000000)?26:0,cond:S=>netWorth(S)>10000000,text:"曾經負債累累的你如今東山再起、資產翻紅，這段谷底翻身的故事被寫成勵志報導。",eff:S=>inc(S,{happy:8,chr:2})},
 {id:"隱藏_人瑞專訪",min:90,max:99,once:true,w:S=>S.age>=90?45:0,text:"記者上門專訪你這位人瑞，你分享長壽祕訣，成了地方之光。",eff:S=>inc(S,{happy:8})},
+/* ===== 高齡／人瑞事件（填補 90～122 歲的事件空窗） ===== */
+{id:"重陽敬老",min:66,max:122,kind:"minor",w:12,text:"重陽節到了，區公所送來敬老禮金／人瑞金鎖片，里長還來合照。",eff:S=>[...inc(S,{happy:4}),...money(S,20000)]},
+{id:"晨運人瑞",min:70,max:122,kind:"minor",w:S=>(S.health||50)>55?12:6,text:"你天天到公園甩手、外丹功、爬山，硬朗得讓年輕人自嘆不如。",eff:S=>{S.health=clamp((S.health||50)+1,0,100);return inc(S,{con:2,happy:3});}},
+{id:"老友凋零",min:72,max:122,kind:"minor",w:10,text:"又一位老朋友走了，你去參加告別式，感慨人生無常、白髮人送白髮人。",eff:S=>inc(S,{happy:-4})},
+{id:"含飴弄孫2",min:60,max:122,kind:"minor",w:S=>S.children.some(c=>c.resolved)?12:2,text:"兒孫繞膝、假日全家團圓，你含飴弄孫、笑得合不攏嘴。",eff:S=>{S.flags.grandkid=true;return inc(S,{happy:6});}},
+{id:"五代同堂",min:95,max:122,once:true,kind:"main",w:S=>S.children.some(c=>c.resolved)?30:0,cond:S=>S.children.some(c=>c.resolved),text:"你活到見證五代同堂，家族開枝散葉、逢年過節坐滿好幾桌，成了地方美談。",eff:S=>{S.flags.fiveGen=true;S.flags.grandkid=true;mile(S,"👨‍👩‍👧‍👦","五代同堂、兒孫滿堂");return inc(S,{happy:10});}},
+{id:"首長祝壽",min:100,max:122,w:20,text:S=>pick(["市長／縣長親自登門為你祝壽、送匾額，記者一大票。","里長帶著蛋糕和大紅包來祝賀你這位百歲人瑞。","總統府寄來祝賀狀，地方電視台特地來拍你的日常。"]),eff:S=>[...inc(S,{happy:6,chr:2}),...money(S,30000)]},
+{id:"人瑞專訪2",min:100,max:122,w:22,text:"記者又上門了：『阿公／阿嬤，長壽祕訣是什麼？』你笑呵呵：『沒煩惱、呷菜、多走路。』",eff:S=>inc(S,{happy:5})},
+{id:"人瑞津貼",min:100,max:122,w:16,text:"政府發放百歲人瑞敬老津貼，兒孫幫你把紅包收得妥妥當當。",eff:S=>[...inc(S,{happy:3}),...money(S,50000)]},
+{id:"硬朗晚年",min:100,max:122,w:S=>(S.health||50)>50?14:6,text:"你精神矍鑠、耳聰目明，還能自己下棋、看報，講古給曾孫聽。",eff:S=>inc(S,{happy:4,con:1})},
+{id:"老番顛",min:96,max:122,w:S=>(S.health||50)<45?12:5,text:"你偶爾忘東忘西、認錯人，家人半哄半勸，你自己倒是樂得自在。",eff:S=>inc(S,{happy:-2,int:-1})},
+{id:"破紀錄關注",min:116,max:122,w:30,text:"你的年齡逼近台灣最高齡紀錄，人口學者與媒體爭相研究你的長壽基因。",eff:S=>inc(S,{happy:6,chr:3})},
+{id:"最高齡人瑞",min:120,max:122,once:true,kind:"main",w:40,text:"你成了全台最高齡的傳奇人瑞，連國際媒體都來朝聖，寫下台灣的長壽紀錄。",eff:S=>{S.flags.oldestRecord=true;mile(S,"🏅","登上台灣最高齡人瑞，寫下歷史紀錄");return inc(S,{happy:12,chr:4});}},
+{id:"立遺囑",min:78,max:122,once:true,w:S=>(netWorth(S)>1500000)?15:0,cond:S=>netWorth(S)>1000000,choice:true,q:"年事已高，律師建議你及早立遺囑、安排遺產，免得子女日後爭產…",
+  options:[
+    {t:"公平分配、白紙黑字寫清楚",hint:"家和萬事興",eff:S=>{S.flags.willMade=true;return inc(S,{happy:4});},res:S=>"你把身後事交代得清清楚楚，了無牽掛。"},
+    {t:"不想面對，拖著再說",hint:"埋下爭產隱患",eff:S=>inc(S,{happy:-2}),res:S=>"你把這事一延再延。"},
+  ]},
 {id:"隱藏_孤獨終老",min:62,max:82,once:true,w:S=>(S.rel==="單身"&&S.children.length===0)?9:0,cond:S=>S.rel==="單身"&&S.children.length===0,text:"回首一生未婚無子，你活得自在瀟灑，也有幾分孤獨——你早已與自己和解。",eff:S=>inc(S,{happy:3})},
 
 /* ===== 健康 · 就醫 · 養生（決定壽命長短） ===== */
@@ -1908,7 +1928,7 @@ const EV=[
     {t:"積極治療、配合療程",hint:"花錢保命",eff:S=>{let ok=chance(S,0.7+(S.health-50)*0.003);let cost=Math.min(Math.max(800000,Math.round(Math.max(0,S.money)*0.2)),5000000);if(ok){S.health=clamp(S.health-3,0,100);return [...inc(S,{con:-2,happy:-2}),...money(S,-cost)];}S.health=clamp(S.health-12,0,100);return [...inc(S,{con:-6,happy:-6}),...money(S,-cost)];},res:S=>"你勇敢面對、配合治療，撿回健康。"},
     {t:"逃避／信偏方，不想面對",hint:"賭命",eff:S=>{if(chance(S,0.45))killLater(S,"諱疾忌醫，病情惡化，你早早離世。");S.health=clamp(S.health-14,0,100);return inc(S,{happy:-3,con:-5});},res:S=>"你把希望寄託在偏方上。"},
   ]},
-{id:"老年跌倒",min:68,max:100,w:S=>(S.age>=68)?12:0,cond:S=>S.age>=68,choice:true,q:"你一個踉蹌跌倒、髖部劇痛——老人家最怕跌…",
+{id:"老年跌倒",min:68,max:122,w:S=>(S.age>=68)?12:0,cond:S=>S.age>=68,choice:true,q:"你一個踉蹌跌倒、髖部劇痛——老人家最怕跌…",
   options:[
     {t:"立刻就醫、認真復健",hint:"顧命",eff:S=>{S.health=clamp(S.health-3,0,100);return [...inc(S,{con:-3,happy:-2}),...money(S,-200000)];},res:S=>"你慢慢復健、重新站了起來。"},
     {t:"忍一忍、沒去看",hint:"拖成大病",eff:S=>{S.health=clamp(S.health-9,0,100);return inc(S,{con:-6,happy:-3});},res:S=>"你臥床了好一陣子。"},
