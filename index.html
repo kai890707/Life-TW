@@ -2574,7 +2574,16 @@ function endGame(){
     +newly.map(ac=>`<span style="border-color:var(--gold);color:var(--gold)">🆕 ${ac.icon}${ac.nm}</span>`).join("")
     +uniq.map(x=>`<span>${x}</span>`).join("");
   const og=$("openGallery");if(og)og.onclick=(e)=>{e.preventDefault();openGallery();};
-  endData={letter,title,score,avgHappy,uniq,ms};
+  endData={letter,title,score,avgHappy,uniq,ms,
+    sub:`${S.name} · ${S.sex}生 · ${S.region.nm}人 · ${careerFinal()} · 享年 ${S.age} 歲 · 🌱${S.seed}`,
+    age:S.age, peakMoney:p.money, finalMoney:nwFinal, edu:S.edu,
+    chr:p.chr, int:p.int, con:p.con, health:S.health||0, peakHealth:p.health||0,
+    kids:S.children.length, topSkills,
+    happyHist:S.happyHist, moneyHist:S.moneyHist,
+    incRows:incRows.filter(r=>r[1]>0), expRows:expRows.filter(r=>r[1]>0), totalIn, totalOut,
+    endLabel:endLabel?{icon:endLabel.icon||"🏁",title:endLabel.title}:null,
+    goal:gg?{nm:gg.nm,pct:goalPct,stars:gStars}:null,
+    achv:{size:store.size,total:ACHIEVEMENTS.length,newly:newly.length}};
   // 不直接跳結算：讓玩家先看完人生最後的記錄，再自己點擊查看結算
   $("btnNext").disabled=true;const _ba=$("btnAct");if(_ba)_ba.disabled=true;
   $("choiceArea").innerHTML=`<div class="choice-box"><div class="q">🕯️ ${S.name} 的人生走到了終點，享年 ${S.age} 歲。</div><div class="opts"><button class="btn small" id="btnViewEnd">🪦 查看這一生的結算 →</button></div></div>`;
@@ -2591,27 +2600,84 @@ stepYear=function(){_origStep();if(S)updatePeakCareer();};
 /* ==========================================================================
    分享長圖（canvas → PNG）
    ========================================================================== */
-$("btnShare").onclick=()=>{
+$("btnShare").onclick=async ()=>{
   if(!endData)return;
-  const cv=$("shareCanvas"),dpr=2,W=560;
-  const ms=endData.ms,rows=ms.length;
-  const H=250+ (ms.length*24)+ 60 + Math.ceil(endData.uniq.length/3)*30 + 80;
-  cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext("2d");x.scale(dpr,dpr);
-  x.fillStyle="#121524";x.fillRect(0,0,W,H);
-  x.fillStyle="#7c8bff";x.font="800 24px 'PingFang TC',sans-serif";x.textAlign="center";x.fillText("鬼島人生模擬器",W/2,40);
-  x.fillStyle="#ffd76b";x.font="900 56px sans-serif";x.fillText(endData.letter,W/2,110);
-  x.fillStyle="#57e0c8";x.font="700 20px 'PingFang TC',sans-serif";x.fillText(endData.title,W/2,142);
-  x.fillStyle="#98a0c0";x.font="13px 'PingFang TC',sans-serif";x.fillText($("gradeSub").textContent,W/2,166);
-  x.fillStyle="#ffcf6b";x.font="700 15px 'PingFang TC',sans-serif";
-  x.fillText(`綜合評分 ${endData.score}　資產峰值 ${fmtMoney(S.peak.money)}　平均快樂 ${endData.avgHappy.toFixed(0)}`,W/2,196);
-  let y=232;x.textAlign="left";x.fillStyle="#57e0c8";x.font="700 15px 'PingFang TC',sans-serif";x.fillText("📜 人生里程碑",30,y);y+=26;
-  x.font="14px 'PingFang TC',sans-serif";
-  ms.forEach(m=>{x.fillStyle="#98a0c0";x.fillText(m.age+"歲",30,y);x.fillStyle="#e9ecf6";x.fillText(m.icon+" "+m.text,80,y);y+=24;});
-  y+=14;x.fillStyle="#57e0c8";x.font="700 15px 'PingFang TC',sans-serif";x.fillText("🏆 成就",30,y);y+=24;
-  x.font="13px 'PingFang TC',sans-serif";let cx=30;
-  endData.uniq.forEach((t)=>{const wd=x.measureText(t).width+20;if(cx+wd>W-30){cx=30;y+=28;}x.fillStyle="#1b2036";x.fillRect(cx,y-15,wd,22);x.fillStyle="#8fb8ff";x.fillText(t,cx+10,y);cx+=wd+8;});
-  y+=40;x.fillStyle="#5b6480";x.font="12px 'PingFang TC',sans-serif";x.textAlign="center";x.fillText("鬼島人生模擬器 · 你想重開幾次？",W/2,y);
-  cv.toBlob(b=>{const url=URL.createObjectURL(b);const link=document.createElement("a");link.href=url;link.download="我的鬼島人生.png";link.click();setTimeout(()=>URL.revokeObjectURL(url),3000);});
+  const d=endData,cv=$("shareCanvas"),dpr=2,W=560;
+  const g=cv.getContext("2d");
+  const fm=v=>fmtMoney(v).replace("NT$","");
+  const stars=d.goal?("★".repeat(d.goal.stars)+"☆".repeat(5-d.goal.stars)):"";
+  const FN="'PingFang TC','Noto Sans TC',sans-serif";
+  // 依實際內容量測高度，再繪製（避免內容被裁切或留大片空白）
+  function layout(draw,H){
+    let y=0;
+    const ctr=(t,c,f)=>{g.font=f;g.textAlign="center";if(draw){g.fillStyle=c;g.fillText(t,W/2,y);}};
+    const lft=(t,xx,c,f)=>{g.font=f;g.textAlign="left";if(draw){g.fillStyle=c;g.fillText(t,xx,y);}};
+    const rgt=(t,xx,c,f)=>{g.font=f;g.textAlign="right";if(draw){g.fillStyle=c;g.fillText(t,xx,y);}};
+    const fit=(t,maxw)=>{g.font="14px "+FN;if(g.measureText(t).width<=maxw)return t;let s=t;while(s.length>1&&g.measureText(s+"…").width>maxw)s=s.slice(0,-1);return s+"…";};
+    if(draw){g.fillStyle="#121524";g.fillRect(0,0,W,H);}
+    y=42; ctr("鬼島人生模擬器","#7c8bff","800 24px "+FN);
+    y+=62; ctr(d.letter,"#ffd76b","900 56px sans-serif");
+    y+=32; ctr(fit(d.title,W-60),"#57e0c8","700 20px "+FN);
+    y+=24; ctr(fit(d.sub,W-40),"#98a0c0","13px "+FN);
+    y+=28; ctr(`綜合評分 ${d.score}　資產峰值 ${fm(d.peakMoney)}　平均快樂 ${d.avgHappy.toFixed(0)}`,"#ffcf6b","700 15px "+FN);
+    if(d.endLabel){y+=32; if(draw){g.fillStyle="#2a1c22";g.fillRect(30,y-16,W-60,25);} lft(fit(`${d.endLabel.icon} 結局：${d.endLabel.title}`,W-80),40,"#ff9ec4","700 14px "+FN);}
+    if(d.goal){y+=30; if(draw){g.fillStyle="#10221a";g.fillRect(30,y-16,W-60,25);} lft(`🎯 志向「${d.goal.nm}」達成度 ${d.goal.pct}%　${stars}`,40,"#57e0c8","700 14px "+FN);}
+    // 曲線圖（快樂／資產）
+    const chart=(title,rightTxt,hist,y0v,y1v,color)=>{
+      y+=32; lft(title,30,"#98a0c0","700 13px "+FN); rgt(rightTxt,W-30,"#5b6480","12px "+FN);
+      y+=8; const cx0=30,cw=W-60,ch=72,cy0=y;
+      if(draw){g.fillStyle="#0e111c";g.fillRect(cx0,cy0,cw,ch);}
+      if(hist&&hist.length>1){
+        const xs=hist.map(p=>p.x),minX=Math.min.apply(null,xs),maxX=Math.max.apply(null,xs);
+        const X=x=>cx0+(maxX>minX?(x-minX)/(maxX-minX):0.5)*cw;
+        const Y=v=>cy0+ch-Math.max(0,Math.min(1,(v-y0v)/((y1v-y0v)||1)))*ch;
+        if(draw){g.beginPath();hist.forEach((p,i)=>{const px=X(p.x),py=Y(p.y);i?g.lineTo(px,py):g.moveTo(px,py);});g.strokeStyle=color;g.lineWidth=2;g.lineJoin="round";g.stroke();}
+      }
+      y+=ch;
+    };
+    chart("😊 快樂曲線","0–100",d.happyHist,0,100,"#57e0c8");
+    chart("💰 資產曲線",fm(d.peakMoney)+" 峰值",(d.moneyHist||[]).map(m=>({x:m.x,y:Math.max(0,m.y)})),0,Math.max(500000,d.peakMoney*1.05),"#ffcf6b");
+    // 一生總結
+    y+=42; lft("📊 一生總結",30,"#57e0c8","700 15px "+FN);
+    const sl=[["綜合評分",d.score],["享年",d.age+" 歲"],["資產峰值",fm(d.peakMoney)],["最終資產",fm(d.finalMoney)],["最高學歷",d.edu],["平均快樂",d.avgHappy.toFixed(0)],["顏/智/體",`${d.chr}/${d.int}/${d.con}`],["健康",`${d.health}（峰值${d.peakHealth}）`],["子女",d.kids+" 人"]];
+    for(let i=0;i<sl.length;i+=2){y+=25;
+      lft(sl[i][0],30,"#98a0c0","14px "+FN); lft(String(sl[i][1]),130,"#e9ecf6","14px "+FN);
+      if(sl[i+1]){lft(sl[i+1][0],300,"#98a0c0","14px "+FN); lft(String(sl[i+1][1]),400,"#e9ecf6","14px "+FN);}
+    }
+    y+=25; lft("頂尖專長",30,"#98a0c0","14px "+FN); lft(fit(d.topSkills,W-160),130,"#e9ecf6","14px "+FN);
+    // 一生收支總結
+    y+=36; lft("💰 一生收支總結",30,"#57e0c8","700 15px "+FN);
+    const money=(t,v,c)=>{y+=23; lft(t,30,"#98a0c0","14px "+FN); rgt(v,W-30,c,"700 14px "+FN);};
+    d.incRows.forEach(r=>money(r[0],fm(r[1]),"#5ad07a"));
+    money("收入合計",fm(d.totalIn),"#5ad07a");
+    d.expRows.forEach(r=>money(r[0],"−"+fm(r[1]),"#ff7a90"));
+    money("支出合計","−"+fm(d.totalOut),"#ff7a90");
+    // 里程碑
+    y+=38; lft("📜 人生里程碑",30,"#57e0c8","700 15px "+FN);
+    d.ms.forEach(m=>{y+=24; lft(m.age+"歲",30,"#98a0c0","14px "+FN); lft(fit(m.icon+" "+m.text,W-110),82,"#e9ecf6","14px "+FN);});
+    if(!d.ms.length){y+=24; lft("這一生沒有留下太多足跡……",30,"#5b6480","14px "+FN);}
+    // 成就
+    y+=36; lft(`🏆 成就 · 已解鎖 ${d.achv.size}/${d.achv.total}${d.achv.newly?`（本局新增 ${d.achv.newly}）`:""}`,30,"#57e0c8","700 15px "+FN);
+    y+=26; let cx=30; const CF="13px "+FN;
+    d.uniq.forEach(t=>{g.font=CF;const wd=g.measureText(t).width+20; if(cx+wd>W-30){cx=30;y+=28;} if(draw){g.fillStyle="#1b2036";g.fillRect(cx,y-15,wd,22);g.fillStyle="#8fb8ff";g.textAlign="left";g.font=CF;g.fillText(t,cx+10,y);} cx+=wd+8;});
+    // footer
+    y+=46; ctr("鬼島人生模擬器 · 你想重開幾次？","#5b6480","12px "+FN);
+    y+=22;
+    return y;
+  }
+  const H=Math.ceil(layout(false,0));
+  cv.width=W*dpr;cv.height=H*dpr;g.setTransform(dpr,0,0,dpr,0,0);
+  layout(true,H);
+  cv.toBlob(async (b)=>{
+    if(!b)return;
+    const file=new File([b],"我的鬼島人生.png",{type:"image/png"});
+    // 手機優先用系統分享面板（存到相簿／傳到 LINE 等）；不支援時退回下載
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:"我的鬼島人生",text:`我在鬼島人生模擬器活出了「${d.title}」，評級 ${d.letter}！`}); return; }
+      catch(e){ if(e&&e.name==="AbortError")return; }
+    }
+    const url=URL.createObjectURL(b);const a=document.createElement("a");a.href=url;a.download="我的鬼島人生.png";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+  },"image/png");
 };
 
 /* ---------- 成就圖鑑 ---------- */
