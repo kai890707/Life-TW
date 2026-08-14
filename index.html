@@ -2154,6 +2154,11 @@ $("btnBeginLife").onclick=()=>{
   if(!S.goal)return;
   const gg=GOALS.find(g=>g.id===S.goal);
   show("screen-game");
+  // 重置上一局結算殘留的 UI 狀態（避免新生兒卡在「查看結算」按鈕、繼續鈕被鎖）
+  $("choiceArea").innerHTML="";
+  S.paused=false;
+  $("btnNext").disabled=false;
+  const _ba=$("btnAct");if(_ba)_ba.disabled=false;
   logLine(-1,`【${S.name} · ${S.sex}生 · ${S.region.nm}人 · ${S.fam.nm}】`,[]);
   logLine(-1,`先天天賦：${S.talent.nm}`,[],"big");
   logLine(-1,`人生志向：${gg.icon} ${gg.nm}`,[],"mile");
