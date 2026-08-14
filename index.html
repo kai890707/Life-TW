@@ -135,6 +135,45 @@
   .choice-box .opts{display:flex; flex-direction:column; gap:8px;}
   .choice-box .opts button{position:relative;}
   .choice-box .opts .hint{display:block; font-size:11px; color:rgba(255,255,255,.72); font-weight:400; margin-top:2px;}
+
+  /* ===== UX 優化 A–E ===== */
+  /* A. 常駐志向進度條 */
+  .goal-bar{margin-top:8px; background:#0c0f1c; border:1px solid var(--line); border-radius:10px; padding:7px 12px;}
+  .goal-bar .gb-head{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; margin-bottom:5px;}
+  .goal-bar .gb-nm{font-weight:700; color:var(--accent2);}
+  .goal-bar .gb-nm small{color:var(--muted); font-weight:400; margin-left:4px;}
+  .goal-bar .gb-pct{font-weight:800; color:var(--gold);}
+  .goal-bar .gb-track{height:7px; border-radius:999px; background:#20263f; overflow:hidden;}
+  .goal-bar .gb-fill{height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .5s ease;}
+  /* B. 統計變動閃動 */
+  @keyframes statPulseUp{0%{background:#123a20}30%{transform:scale(1.14)}100%{background:#0c0f1c; transform:scale(1)}}
+  @keyframes statPulseDown{0%{background:#3a1622}30%{transform:scale(1.14)}100%{background:#0c0f1c; transform:scale(1)}}
+  .stat.flash-up{animation:statPulseUp .7s ease;}
+  .stat.flash-down{animation:statPulseDown .7s ease;}
+  .chip.flash-up{animation:statPulseUp .7s ease;} .chip.flash-down{animation:statPulseDown .7s ease;}
+  @keyframes moneyUp{0%,100%{color:var(--money); transform:none}35%{color:var(--good); transform:scale(1.07)}}
+  @keyframes moneyDown{0%,100%{color:var(--money); transform:none}35%{color:var(--bad); transform:scale(1.07)}}
+  .mv.flash-up{animation:moneyUp .7s ease; display:inline-block;}
+  .mv.flash-down{animation:moneyDown .7s ease; display:inline-block;}
+  /* C. 三種互動辨識 */
+  .choice-box{box-shadow:0 6px 20px rgba(0,0,0,.35); animation:cbIn .22s ease;}
+  @keyframes cbIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .cb-tag{display:inline-block; font-size:11px; font-weight:800; letter-spacing:1px; padding:3px 11px; border-radius:999px; margin-bottom:9px;}
+  .choice-box.kind-choice{border-color:var(--accent);} .kind-choice .cb-tag{background:#20264d; color:#aab4ff;}
+  .choice-box.kind-train{border-color:var(--gold);} .kind-train .cb-tag{background:#2e2410; color:var(--gold);}
+  .choice-box.kind-action{border-color:var(--accent2);} .kind-action .cb-tag{background:#0c2620; color:var(--accent2);}
+  .choice-box.kind-end{border-color:var(--bad);} .kind-end .cb-tag{background:#331722; color:var(--bad);}
+  /* D. chip 可點說明 */
+  .chip.tappable{cursor:pointer;} .chip.tappable:active{filter:brightness(1.35);}
+  /* toast */
+  #toast{position:fixed; left:50%; bottom:80px; transform:translateX(-50%) translateY(20px); background:#0c0f1c; border:1px solid var(--accent); color:var(--txt); font-size:13px; line-height:1.5; padding:9px 15px; border-radius:12px; max-width:86vw; text-align:center; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:99; box-shadow:0 8px 24px rgba(0,0,0,.5);}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  /* E. SEO/FAQ 收合 */
+  .seo-wrap{max-width:540px; margin:6px auto 28px; padding:0 6px;}
+  .seo-wrap>summary{cursor:pointer; list-style:none; text-align:center; color:var(--muted); font-size:12px; letter-spacing:1px; padding:10px; border-top:1px solid var(--line);}
+  .seo-wrap>summary::-webkit-details-marker{display:none;}
+  .seo-wrap>summary::after{content:" ▾"; color:var(--accent2);}
+  .seo-wrap[open]>summary::after{content:" ▴";}
   .skgrid{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
   .skrow{display:flex; align-items:center; gap:6px; background:#0c0f1c; border:1px solid var(--line); border-radius:9px; padding:6px 8px;}
   .skrow .skn{font-size:12px; font-weight:700; width:52px; flex-shrink:0;}
@@ -227,6 +266,7 @@
       <div><div class="ml">💰 總資產</div><div class="mv" id="moneyLabel">NT$0</div><div id="assetSub" style="font-size:11px;color:var(--muted);margin-top:1px;"></div></div>
       <div style="text-align:right"><div class="ml" id="jobLabel">💼 學生</div><div class="mv" id="incomeLabel" style="font-size:15px;color:var(--accent2)">年薪 —</div></div>
     </div>
+    <div class="goal-bar hidden" id="goalBar"></div>
     <div class="chips" id="chipBar"></div>
     <div class="log" id="log"></div>
     <div id="choiceArea"></div>
@@ -254,7 +294,8 @@
   </div>
 
   <div class="foot">靈感來自 yakyulife（棒球人生模擬器）· 純前端單機 · 事件純屬虛構娛樂</div>
-  <section class="seo-info" style="max-width:540px;margin:4px auto 28px;padding:0 6px;color:var(--muted);font-size:13px;line-height:1.8;">
+  <details class="seo-wrap"><summary>關於本遊戲 · 常見問題 FAQ</summary>
+  <section class="seo-info" style="margin:4px auto 8px;color:var(--muted);font-size:13px;line-height:1.8;">
     <h2 style="font-size:15px;color:var(--txt);margin:18px 0 8px;letter-spacing:1px;">關於鬼島人生模擬器</h2>
     <p><strong>鬼島人生模擬器</strong>（Ghost Island Life）是一款<strong>免費的線上台灣人生模擬遊戲</strong>。你會投胎成一個台灣人，從 7 歲開始逐年經歷升學、當兵、就業、投資理財、買房、結婚生子、健康養生等事件，一路玩到死亡結算——體驗充滿台灣味與時事梗的完整一生。純網頁、免下載、免註冊，手機與電腦瀏覽器都能玩。</p>
     <h2 style="font-size:15px;color:var(--txt);margin:18px 0 8px;letter-spacing:1px;">常見問題（FAQ）</h2>
@@ -264,6 +305,8 @@
     <details style="margin:6px 0;border-bottom:1px solid var(--line);padding-bottom:6px;"><summary style="cursor:pointer;color:var(--txt);">「鬼島」是什麼意思？</summary><p>「鬼島」是台灣人對台灣的一種自嘲暱稱，常用來調侃低薪、高工時、高房價等現實。遊戲名稱延續這種自我解嘲的幽默，內容仍是模擬一個台灣人的一生。</p></details>
     <p style="margin-top:14px;">🔗 <a href="https://github.com/kai890707/Life-TW" style="color:var(--accent2);">原始碼與完整遊戲百科（GitHub）</a></p>
   </section>
+  </details>
+  <div id="toast"></div>
 </div>
 <div id="galleryOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(8,10,18,.93);z-index:50;overflow-y:auto;padding:16px;">
   <div style="max-width:540px;margin:0 auto;">
@@ -2126,8 +2169,8 @@ const EV=[
 {id:"chain_army",chain:true,min:0,max:120,text:"部隊裡學長學弟制、站夜哨、跑五千、莒光日、五百障礙、被學長電——你在鋼鐵般的日子裡磨出硬漢心志，也交到一輩子的兵役兄弟。",eff:S=>inc(S,{con:3,happy:-1,chr:1})},
 {id:"當兵梗",min:19,max:75,kind:"minor",w:S=>S.flags.conscript?7:0,text:"你又想起當兵的日子：數饅頭、擦皮鞋、刺槍術、放假前一晚興奮到睡不著——當過兵的都懂。",eff:S=>inc(S,{happy:1})},
 /* ===== 教召（後備軍人）：機率被召回，也可能撞上出國計畫 ===== */
-{id:"教召",min:28,max:50,w:S=>(S.flags.conscript&&!S.flags.exempt&&S.stateOverride!=="服刑中"&&S.stateOverride!=="海外流亡")?9:0,cond:S=>S.flags.conscript&&!S.flags.exempt,text:"後備軍人教育召集令來了！你被召回營區 14 天，重溫打靶、行軍、擦槍的日子——老婆碎念、老闆臉臭，你也只能摸摸鼻子報到。",eff:S=>{S.flags.recalledArmy=true;return inc(S,{con:2,happy:-2});}},
-{id:"教召撞出國",min:28,max:44,once:true,w:S=>(S.flags.conscript&&!S.flags.exempt&&S.stateOverride!=="服刑中")?7:0,cond:S=>S.flags.conscript&&!S.flags.exempt,choice:true,q:"你早就訂好機票、安排出國（旅遊／出差／打工度假），臨行前竟收到一紙教召令，時間硬生生撞在一起…",
+{id:"教召",min:24,max:37,w:S=>(S.flags.conscript&&!S.flags.exempt&&S.stateOverride!=="服刑中"&&S.stateOverride!=="海外流亡")?9:0,cond:S=>S.flags.conscript&&!S.flags.exempt&&S.age<=37,text:"後備軍人教育召集令來了！你被召回營區 14 天，重溫打靶、行軍、擦槍的日子——老婆碎念、老闆臉臭，你也只能摸摸鼻子報到。",eff:S=>{S.flags.recalledArmy=true;return inc(S,{con:2,happy:-2});}},
+{id:"教召撞出國",min:24,max:37,once:true,w:S=>(S.flags.conscript&&!S.flags.exempt&&S.stateOverride!=="服刑中")?7:0,cond:S=>S.flags.conscript&&!S.flags.exempt&&S.age<=37,choice:true,q:"你早就訂好機票、安排出國（旅遊／出差／打工度假），臨行前竟收到一紙教召令，時間硬生生撞在一起…",
   options:[
     {t:"乖乖退票、報到教召",hint:"守法，但機票與計畫全泡湯",eff:S=>{S.money-=Math.min(80000,Math.max(0,S.money));return inc(S,{happy:-5,con:1});},res:S=>"你含淚退掉機票、剃了頭走進營區。"},
     {t:"照樣出國、當作沒收到",hint:"爽一時——但這是『妨害兵役』",eff:S=>{S.flags.draftEvade=true;if(chance(S,0.7))schedule(S,1,"chain_draftEvade");else S.flags.draftLucky=true;return inc(S,{happy:5});},res:S=>S.flags.draftLucky?"你關機出國玩得很盡興，回國竟也沒事——好險。":"你關機出國玩得很開心——但兵役單位已經盯上你了。"},
@@ -2408,23 +2451,28 @@ const BARCOL={chr:"#ff9ec4",int:"#7cc4ff",con:"#5ad07a",happy:"#ffcf6b"};
 function renderGame(){
   $("ageLabel").textContent=S.age;$("idLabel").textContent=(S.name?S.name+" · ":"")+S.sex+"生 · "+S.region.nm;$("stageLabel").textContent=S.stateOverride==="服刑中"?("🔒 服刑到 "+S.jailUntil+" 歲"):stageOf(S.age);
   const s=S.stats;
-  $("statsBar").innerHTML=[["chr","顏值"],["int","智力"],["con","體質"],["happy","快樂"]].map(([k,nm])=>`<div class="stat"><div class="k">${nm}</div><div class="v">${s[k]}</div><div class="mini"><i style="width:${s[k]}%;background:${BARCOL[k]}"></i></div></div>`).join("");
+  const prev=S._shown||{};
+  $("statsBar").innerHTML=[["chr","顏值"],["int","智力"],["con","體質"],["happy","快樂"]].map(([k,nm])=>{const v=s[k],pv=prev[k];const fl=(pv!==undefined&&v!==pv)?(v>pv?" flash-up":" flash-down"):"";return `<div class="stat${fl}"><div class="k">${nm}</div><div class="v">${v}</div><div class="mini"><i style="width:${v}%;background:${BARCOL[k]}"></i></div></div>`;}).join("");
   const nw=netWorth(S);
   const mv=$("moneyLabel");mv.textContent=fmtMoney(nw);mv.classList.toggle("neg",nw<0);
+  if(prev.money!==undefined&&nw!==prev.money){mv.classList.remove("flash-up","flash-down");void mv.offsetWidth;mv.classList.add(nw>prev.money?"flash-up":"flash-down");}
   const asub=$("assetSub");if(asub){const parts=[];if(S.port>0||S.homes>0)parts.push(`現金 ${fmtMoney(S.money).replace("NT$","")}`);if(S.port>0)parts.push(`持股 ${fmtMoney(S.port).replace("NT$","")}${S.flags.dca?"⏩":""}`);if(S.homes>0)parts.push(`房產 ${fmtMoney((S.homeValue||0)-(S.homeDebt||0)).replace("NT$","")}`);asub.textContent=parts.join("・");}
   $("jobLabel").innerHTML="💼 "+trackName();
   const il=$("incomeLabel");il.textContent=S.income>0?("年薪 "+fmtMoney(S.income).replace("NT$","")):(S.divLast>0?("被動收入 "+fmtMoney(S.divLast).replace("NT$","")):(S.income<0?"淨支出":"年薪 —"));
+  // A. 常駐志向進度條
+  {const gb=$("goalBar");const gg=(typeof GOALS!=="undefined"&&S.goal)?GOALS.find(g=>g.id===S.goal):null;if(gb){if(gg){const p=Math.round(clamp01(gg.prog(S))*100);gb.classList.remove("hidden");gb.innerHTML=`<div class="gb-head"><span class="gb-nm">${gg.icon} ${gg.nm}<small>你的人生志向</small></span><span class="gb-pct">${p}%</span></div><div class="gb-track"><div class="gb-fill" style="width:${p}%"></div></div>`;}else gb.classList.add("hidden");}}
   const chips=[];
-  {const h=S.health||0,col=h>=70?"#5ad07a":h>=45?"#ffcf6b":"#ff7a7a";chips.push(`<span class="chip" style="border-color:${col}66"><span style="color:${col}">❤️‍🩹 健康 <b>${h}</b></span></span>`);}
-  chips.push(`<span class="chip">🎓 <b>${S.edu}</b></span>`);
-  chips.push(`<span class="chip">❤️ <b>${S.rel}</b>${(S.rel==="已婚"&&S.spouse)?" "+(S.spouse.love>=70?"💕":S.spouse.love>=40?"💗":"💔"):""}</span>`);
-  if(S.homes>0)chips.push(`<span class="chip">🏠 房產 <b>${S.homes}間</b>${S.homes>=2?" 🧧包租":""}</span>`);
-  if(S.children.length)chips.push(`<span class="chip">👨‍👩‍👧 <b>${S.children.length}娃</b></span>`);
-  if(S.connections>=15)chips.push(`<span class="chip">🤝 人脈 <b>${S.connections}</b></span>`);
-  {const hb=[];if(S.habits&&S.habits.smoke)hb.push("🚬");if(S.habits&&S.habits.betel)hb.push("🌰");if(S.habits&&S.habits.gamble)hb.push("🎲");if(hb.length)chips.push(`<span class="chip">${hb.join("")}</span>`);}
-  SKILLS.forEach(sd=>{if(sk(sd.k)>0)chips.push(`<span class="chip skchip">${sd.icon}<b>Lv${sk(sd.k)}</b></span>`);});
+  {const h=S.health||0,col=h>=70?"#5ad07a":h>=45?"#ffcf6b":"#ff7a7a";const pv=prev.health;const fl=(pv!==undefined&&h!==pv)?(h>pv?" flash-up":" flash-down"):"";chips.push(`<span class="chip tappable${fl}" data-tip="健康度：後天養生決定壽命長短，越高越長壽；壞習慣、不就醫會讓它下滑。" style="border-color:${col}66"><span style="color:${col}">❤️‍🩹 健康 <b>${h}</b></span></span>`);}
+  chips.push(`<span class="chip tappable" data-tip="你目前的最高學歷。">🎓 <b>${S.edu}</b></span>`);
+  chips.push(`<span class="chip tappable" data-tip="感情狀態。已婚會顯示與另一半的感情濃度 💕／💗／💔。">❤️ <b>${S.rel}</b>${(S.rel==="已婚"&&S.spouse)?" "+(S.spouse.love>=70?"💕":S.spouse.love>=40?"💗":"💔"):""}</span>`);
+  if(S.homes>0)chips.push(`<span class="chip tappable" data-tip="名下房產數；2 間以上可收租當包租公／婆。">🏠 房產 <b>${S.homes}間</b>${S.homes>=2?" 🧧包租":""}</span>`);
+  if(S.children.length)chips.push(`<span class="chip tappable" data-tip="你的子女數。">👨‍👩‍👧 <b>${S.children.length}娃</b></span>`);
+  if(S.connections>=15)chips.push(`<span class="chip tappable" data-tip="人脈存摺：影響升遷、選舉勝率與貴人事件。">🤝 人脈 <b>${S.connections}</b></span>`);
+  {const hb=[];if(S.habits&&S.habits.smoke)hb.push("🚬");if(S.habits&&S.habits.betel)hb.push("🌰");if(S.habits&&S.habits.gamble)hb.push("🎲");if(hb.length)chips.push(`<span class="chip tappable" data-tip="壞習慣：抽菸🚬／檳榔🌰／賭博🎲 會傷身、傷財、減壽。">${hb.join("")}</span>`);}
+  SKILLS.forEach(sd=>{const lv=sk(sd.k);if(lv>0)chips.push(`<span class="chip skchip tappable" data-tip="專長「${sd.nm}」Lv${lv}：靠特訓投骰提升，等級越高越吃香。">${sd.icon}${sd.nm}<b>Lv${lv}</b></span>`);});
   $("chipBar").innerHTML=chips.join("");
   const ba=$("btnAct");if(ba){const jailed=S.stateOverride==="服刑中";ba.disabled=S.actedThisYear||jailed;ba.textContent=jailed?"🔒 服刑中":(S.actedThisYear?"✓ 已行動":"💡 我要…");}
+  S._shown={chr:s.chr,int:s.int,con:s.con,happy:s.happy,money:nw,health:S.health||0};
 }
 function stageOf(a){if(a<=3)return"嬰幼兒";if(a<=11)return"國小";if(a<=14)return"國中";if(a<=17)return"高中職";if(a<=22)return"大專";if(a<=29)return"青年";if(a<=44)return"壯年";if(a<=59)return"中年";if(a<=74)return"初老";return"老年";}
 function logLine(year,text,deltas,cls){
@@ -2591,7 +2639,7 @@ function presentChoice(ev){
   const q=typeof ev.q==="function"?ev.q(S):ev.q;
   const opts=typeof ev.options==="function"?ev.options(S):ev.options;
   ev._opts=opts;
-  $("choiceArea").innerHTML=`<div class="choice-box"><div class="q">${S.age}歲 · ${q}</div><div class="opts">${opts.map((o,i)=>`<button class="btn small" data-i="${i}">${o.t}${o.hint?`<span class="hint">${o.hint}</span>`:""}</button>`).join("")}</div></div>`;
+  $("choiceArea").innerHTML=`<div class="choice-box kind-choice"><div class="cb-tag">❓ 這個抉擇</div><div class="q">${S.age}歲 · ${q}</div><div class="opts">${opts.map((o,i)=>`<button class="btn small" data-i="${i}">${o.t}${o.hint?`<span class="hint">${o.hint}</span>`:""}</button>`).join("")}</div></div>`;
   $("choiceArea").querySelectorAll("button").forEach(b=>b.onclick=()=>{
     const o=opts[+b.dataset.i];
     let deltas=o.eff(S)||[];
@@ -2630,7 +2678,7 @@ function renderSkillPanel(){
     const can=selDie>=0&&!full;
     return `<div class="skrow ${full?"capfull":(can?"cantake":"")}" data-k="${sd.k}"><span class="skn">${sd.icon}${sd.nm}</span><span class="skd">${dots} <span class="skcap">${xp}/${cap}${full?" 滿":""}</span></span></div>`;
   }).join("");
-  $("choiceArea").innerHTML=`<div class="choice-box"><div class="q">🎲 ${S.age} 歲・特訓：把骰子投入專長<br><small style="font-weight:400;color:var(--muted)">直接點專長＝投入目前的骰子（自動換下一顆）；灰點是先天潛力上限</small></div><div class="dice-row">${dice||'<span style="color:var(--muted)">骰子用完了</span>'}</div><div class="skgrid">${rows}</div><button class="btn small" id="skDone" style="margin-top:10px">${S.dice.length?"放棄剩餘骰子・完成 ▸":"完成 ▸"}</button></div>`;
+  $("choiceArea").innerHTML=`<div class="choice-box kind-train"><div class="cb-tag">🎲 特訓 · 分配骰子</div><div class="q">${S.age} 歲・把骰子投入專長<br><small style="font-weight:400;color:var(--muted)">直接點專長＝投入目前的骰子（自動換下一顆）；灰點是先天潛力上限</small></div><div class="dice-row">${dice||'<span style="color:var(--muted)">骰子用完了</span>'}</div><div class="skgrid">${rows}</div><button class="btn small" id="skDone" style="margin-top:10px">${S.dice.length?"放棄剩餘骰子・完成 ▸":"完成 ▸"}</button></div>`;
   $("choiceArea").querySelectorAll(".skdie").forEach(b=>b.onclick=()=>{selDie=+b.dataset.i;renderSkillPanel();});
   $("choiceArea").querySelectorAll(".skrow").forEach(el=>el.onclick=()=>{if(selDie<0)return;const k=el.dataset.k;applyDieToSkill(k);renderGame();if(S.dice.length===0){finishTraining();}else renderSkillPanel();});
   $("skDone").onclick=()=>finishTraining();
@@ -2672,7 +2720,7 @@ function presentActions(){
   const avail=ACTIONS.filter(a=>a.cond(S));
   if(!avail.length){logLine(S.age,"（目前沒有可主動進行的行動）",[],"minor");return;}
   S.paused=true;$("btnNext").disabled=true;$("btnAct").disabled=true;
-  $("choiceArea").innerHTML=`<div class="choice-box"><div class="q">💡 ${S.age}歲・你想主動做什麼？<small style="font-weight:400;color:var(--muted)">（每年一次）</small></div><div class="opts">${avail.map((a,i)=>`<button class="btn small" data-i="${i}">${a.icon} ${a.t}</button>`).join("")}<button class="btn ghost small" data-i="-1">先算了</button></div></div>`;
+  $("choiceArea").innerHTML=`<div class="choice-box kind-action"><div class="cb-tag">💡 主動行動 · 每年一次</div><div class="q">${S.age}歲・你想主動做什麼？</div><div class="opts">${avail.map((a,i)=>`<button class="btn small" data-i="${i}">${a.icon} ${a.t}</button>`).join("")}<button class="btn ghost small" data-i="-1">先算了</button></div></div>`;
   $("choiceArea").querySelectorAll("button").forEach(b=>b.onclick=()=>{
     const i=+b.dataset.i;
     $("choiceArea").innerHTML="";S.paused=false;$("btnNext").disabled=false;
@@ -2819,7 +2867,7 @@ function endGame(){
     achv:{size:store.size,total:ACHIEVEMENTS.length,newly:newly.length}};
   // 不直接跳結算：讓玩家先看完人生最後的記錄，再自己點擊查看結算
   $("btnNext").disabled=true;const _ba=$("btnAct");if(_ba)_ba.disabled=true;
-  $("choiceArea").innerHTML=`<div class="choice-box"><div class="q">🕯️ ${S.name} 的人生走到了終點，享年 ${S.age} 歲。</div><div class="opts"><button class="btn small" id="btnViewEnd">🪦 查看這一生的結算 →</button></div></div>`;
+  $("choiceArea").innerHTML=`<div class="choice-box kind-end"><div class="cb-tag">🕯️ 人生終點</div><div class="q">${S.name} 的人生走到了終點，享年 ${S.age} 歲。</div><div class="opts"><button class="btn small" id="btnViewEnd">🪦 查看這一生的結算 →</button></div></div>`;
   const _ve=$("btnViewEnd");if(_ve)_ve.onclick=()=>show("screen-end");
 }
 function careerFinal(){return S.peakCareer||trackName();}
@@ -2924,6 +2972,10 @@ function closeGallery(){$("galleryOverlay").classList.add("hidden");}
 $("btnGallery").onclick=openGallery;$("btnCloseGallery").onclick=closeGallery;
 
 /* ---------- 啟動 ---------- */
+/* D. chip 點擊說明 toast */
+let _toastT=null;
+function showToast(msg){const t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.classList.add("show");if(_toastT)clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove("show"),2600);}
+(function(){const cb=document.getElementById("chipBar");if(cb)cb.addEventListener("click",e=>{const c=e.target.closest(".chip[data-tip]");if(c)showToast(c.getAttribute("data-tip"));});})();
 (function(){try{const s=(new URLSearchParams(location.search).get("seed")||"").trim().toUpperCase();$("seedInput").value=s||randomSeedCode();}catch(e){$("seedInput").value=randomSeedCode();}})();renderSetup();show("screen-setup");
 </script>
 </body>
