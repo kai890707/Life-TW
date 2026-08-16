@@ -1020,6 +1020,34 @@ const EV=[
 {id:"funded_cram",min:6,max:14,w:S=>famFunds()==="full"?34:famFunds()==="partial"?14:0,kind:"minor",text:"家裡幫你請家教、上補習班，成績穩穩往上。",eff:S=>inc(S,{int:5})},
 {id:"help_family",min:8,max:16,w:S=>S.fam&&S.fam.filial?18:0,kind:"minor",text:"你放學後幫忙家裡做生意／打理家務。",eff:S=>inc(S,{con:2,int:1,happy:-1})},
 {id:"廟會",min:5,max:14,kind:"minor",w:10,text:"跟著陣頭看廟會遶境，鑼鼓喧天。",eff:S=>inc(S,{faith:4,happy:3})},
+/* ===== 小學／國中生活（15 歲前的校園與童年際遇） ===== */
+{id:"運動會",min:7,max:13,once:true,kind:"minor",w:12,text:S=>S._sportWin?"學校運動會大隊接力，你最後一棒逆轉超車、為班上奪冠，成了全班英雄！":"學校運動會大隊接力，你使盡全力卻在終點前跌了個狗吃屎，膝蓋擦傷、有點糗。",eff:S=>{let win=chance(S,0.45+(S.stats.con-50)*0.008);S._sportWin=win;if(win){S.skills.ath=Math.min(skCap("ath"),skXp("ath")+1);return inc(S,{con:2,chr:3,happy:4});}return inc(S,{con:-1,happy:-2});}},
+{id:"才藝班",min:7,max:12,once:true,w:S=>famFunds()!=="none"?14:6,choice:true,q:"爸媽送你去上才藝班（鋼琴／畫畫／舞蹈／心算），要認真學嗎？",
+  options:[
+    {t:"認真學、培養興趣",hint:"美感／才藝萌芽",eff:S=>{S.skills.art=Math.min(skCap("art"),skXp("art")+2);return [...inc(S,{chr:2,happy:2}),...money(S,-30000)];},res:S=>"你在才藝裡找到樂趣，也開了眼界。"},
+    {t:"每次都翹課擺爛",hint:"錢白花",eff:S=>[...inc(S,{happy:1}),...money(S,-30000)],res:S=>"爸媽的血汗錢就這樣打了水漂。"},
+  ]},
+{id:"模範生選舉",min:9,max:13,once:true,w:12,choice:true,q:"班上要選模範生／班長，你想爭取嗎？",
+  options:[
+    {t:"上台拉票、爭取同學支持",hint:"口才／人緣",eff:S=>{S._won=chance(S,0.4+(S.stats.chr-50)*0.008+sk("talk")*0.05);if(S._won){S.skills.talk=Math.min(skCap("talk"),skXp("talk")+1);return inc(S,{chr:3,happy:4});}return inc(S,{happy:-2});},res:S=>S._won?"你高票當選，胸前別上模範生徽章。":"惜敗，但你第一次學會面對群眾。"},
+    {t:"當個安靜的小孩就好",hint:"低調",eff:S=>inc(S,{happy:1}),res:S=>"你享受一個人的清靜。"},
+  ]},
+{id:"收藏卡熱潮",min:8,max:13,w:10,choice:true,q:"班上瘋收集卡片（寶可夢／遊戲王／鬼滅），大家都在拆包比稀有…",
+  options:[
+    {t:"課金狂拆、蒐集稀有卡",hint:"快樂但燒零用錢",eff:S=>[...inc(S,{happy:5}),...money(S,-15000)],res:S=>"你抽到閃卡，成了班上羨慕的對象。"},
+    {t:"忍住、把零用錢存起來",hint:"從小理財",eff:S=>[...inc(S,{happy:-1}),...money(S,5000)],res:S=>"你看著同學亂花錢，默默存下自己的。"},
+  ]},
+{id:"校外教學",min:7,max:13,kind:"minor",w:12,text:S=>"學校校外教學去了"+pick(["六福村","劍湖山","科博館","農場擠牛奶","消防隊參觀"])+"，你玩得不亦樂乎。",eff:S=>[...inc(S,{happy:4}),...money(S,-8000)]},
+{id:"蛀牙",min:7,max:12,kind:"minor",w:9,text:"糖果餅乾吃太多，你蛀牙了，被媽媽押去看牙醫——那鑽牙的聲音好可怕。",eff:S=>inc(S,{con:-1,happy:-2})},
+{id:"吵著養寵物",min:8,max:14,once:true,w:11,choice:true,q:"你好想養寵物，天天吵著要爸媽答應…",
+  options:[
+    {t:"保證會負責、爭取到手",hint:"陪伴＋責任感",eff:S=>{S.flags.petKid=true;return [...inc(S,{happy:6,con:1}),...money(S,-20000)];},res:S=>"你養了隻毛小孩，牠成了你童年最好的夥伴。"},
+    {t:"被爸媽以『你不會顧』打槍",hint:"殘念",eff:S=>inc(S,{happy:-2}),res:S=>"你只能羨慕別人家的狗。"},
+  ]},
+{id:"腸病毒停課",min:7,max:12,kind:"minor",w:10,text:S=>S._sickKid?"班上爆發腸病毒／流感宣布停課，你也中獎了，發燒又長疹子，在家躺了好幾天。":"班上爆發腸病毒／流感宣布停課，你沒中獎，在家爽放了好幾天假。",eff:S=>{let sick=chance(S,0.4);S._sickKid=sick;return sick?inc(S,{con:-2,happy:-1}):inc(S,{happy:3});}},
+{id:"夜市小遊戲",min:8,max:14,kind:"minor",w:10,text:S=>"夜市裡你玩"+pick(["撈金魚","打彈珠台","戳戳樂","射氣球","套圈圈"])+"，玩得欲罷不能。",eff:S=>[...inc(S,{happy:3}),...money(S,-3000)]},
+{id:"被老師罰",min:8,max:14,kind:"minor",w:9,text:S=>"你"+pick(["上課講話","忘了寫作業","打瞌睡","跟同學傳紙條"])+"，被老師罰"+pick(["站到教室後面","抄課文十遍","愛的小手打手心"])+"。",eff:S=>inc(S,{happy:-2,int:1})},
+{id:"暑假作業",min:7,max:14,once:true,kind:"minor",w:10,text:"漫長暑假你只顧著玩，開學前一週才驚覺暑假作業一個字都沒寫，只好熬夜狂補到天亮。",eff:S=>inc(S,{int:1,happy:-1,con:-1})},
 
 /* ===== 升學門檻：能力（含學識/科技專長）不夠就上不了好學校 ===== */
 {id:"會考",min:15,max:16,once:true,w:400,cond:S=>S.track==="student"&&!S.flags.dropout&&!S.left,eff:S=>{
@@ -1429,7 +1457,7 @@ const EV=[
 {id:"颱風假",min:6,max:75,kind:"minor",w:12,text:"放颱風假！在家耍廢追劇最爽。",eff:S=>inc(S,{happy:3})},
 {id:"停電",min:8,max:85,kind:"minor",w:6,text:"全台大停電，你在黑暗中懷疑人生。",eff:S=>inc(S,{happy:-2})},
 {id:"選舉",min:20,max:85,kind:"minor",w:9,text:"選舉到了，你為了挺「民國黨」還是「民主黨」跟人吵翻，Line 群組退三個。",eff:S=>inc(S,{happy:-2,int:1})},
-{id:"疫情",min:10,max:85,once:true,w:10,text:"一場大疫情來襲，你搶口罩、搶快篩、居家隔離。",eff:S=>inc(S,chance(S,0.4)?{con:-4,happy:-3}:{happy:-2})},
+{id:"疫情",min:14,max:82,once:true,w:S=>S.firedOnce["世紀疫情"]?0:2,cond:S=>!S.firedOnce["世紀疫情"],text:S=>pick(["一場疫情來襲，你搶口罩、搶快篩、居家隔離，生活大亂。","你不幸確診，在家隔離、發燒又失去味覺，難受了好一陣子。","疫情下改成遠距上班／上課，關在家裡悶得發慌。","疫苗開打，你排隊接種，手臂痠了兩天還微微發燒。"]),eff:S=>inc(S,chance(S,0.4)?{con:-4,happy:-3}:{happy:-2})},
 {id:"追星",min:14,max:38,kind:"minor",w:10,cond:S=>S.stats.happy<75,text:"你搶演唱會門票、應援買周邊，快樂但破財。",eff:S=>[...inc(S,{happy:5}),...money(S,-25000)]},
 {id:"健身",min:18,max:66,kind:"minor",w:14,text:"你辦了健身房會員，練出好身材（雖然常沒去）。",eff:S=>inc(S,{con:4,chr:2})},
 {id:"旅遊",min:22,max:78,w:S=>S.flags.homeless?0:(S.money>500000?16:6),text:"你安排了一趟旅行，出國走走充電。",eff:S=>{S._traveled=(S._traveled||0)+1;return [...inc(S,{happy:5}),...money(S,-70000)];}},
@@ -1538,26 +1566,50 @@ const EV=[
     {t:"加入職業啦啦隊！",hint:"顏值＋舞蹈之路",eff:S=>{enterTrack(S,"cheer",true);mile(S,"🎀","加入職業啦啦隊，成為「應援啦啦隊員」");return inc(S,{chr:3,happy:5});},res:S=>"你站上應援台，鎂光燈與加油聲把你包圍。"},
     {t:"還是算了",hint:"低調過生活",eff:S=>inc(S,{happy:1}),res:S=>"你選擇平凡的生活。"},
   ]},
-{id:"應援之路",min:18,max:46,w:S=>(S.track==="cheer"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="cheer"&&S.rank<2,text:S=>S._promoUp?"人氣持續累積，你成了應援台上眾人追捧的焦點。":"你拚了命練舞、經營社群，這段日子人氣卻卡關、累得有些氣餒。",eff:S=>{const nx=TRACKS.cheer.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("art")*0.05+(S.stats.chr-65)*0.006)){S._promoUp=true;S.rank++;S.income=nx.income;const nt=typeof nx.t==="function"?nx.t(S):nx.t;mile(S,"🎀","人氣爆棚，晉升為「"+nt+"」");return inc(S,{happy:7,chr:3});}S._promoUp=false;return inc(S,{happy:-2,con:-1});}},
+{id:"應援之路",min:18,max:37,w:S=>(S.track==="cheer"&&S.rank<2&&(S.age-S.trackStart)>=2)?90:0,cond:S=>S.track==="cheer"&&S.rank<2,text:S=>S._promoUp?"人氣持續累積，你成了應援台上眾人追捧的焦點。":"你拚了命練舞、經營社群，這段日子人氣卻卡關、累得有些氣餒。",eff:S=>{const nx=TRACKS.cheer.ranks[S.rank+1],req=nx.req||{};let ok=true;for(const k in req)if(S.stats[k]<req[k])ok=false;if(ok&&chance(S,0.32+sk("art")*0.05+(S.stats.chr-65)*0.006)){S._promoUp=true;S.rank++;S.income=nx.income;const nt=typeof nx.t==="function"?nx.t(S):nx.t;mile(S,"🎀","人氣爆棚，晉升為「"+nt+"」");return inc(S,{happy:7,chr:3});}S._promoUp=false;return inc(S,{happy:-2,con:-1});}},
 {id:"應援爆紅",min:18,max:42,once:true,w:S=>(S.track==="cheer")?16:0,cond:S=>S.track==="cheer",text:"你的應援舞蹈被球迷剪成短影音瘋傳，一夜之間成為全網焦點，還登上運動版頭條。",eff:S=>{S.connections=Math.min(100,S.connections+8);S.flags.cheerStar=true;return inc(S,{chr:6,happy:6});}},
-{id:"球場開球",min:18,max:46,kind:"minor",w:S=>(S.track==="cheer")?14:0,cond:S=>S.track==="cheer",text:"你受邀在滿場球迷前開球、擔任應援主持，全場為你歡呼。",eff:S=>[...inc(S,{chr:2,happy:4}),...money(S,60000)]},
-{id:"代言接不完",min:20,max:46,w:S=>(S.track==="cheer"&&S.rank>=1)?14:0,cond:S=>S.track==="cheer"&&S.rank>=1,text:"人氣高漲，運動品牌、手搖飲、遊戲代言接到手軟。",eff:S=>[...inc(S,{happy:4}),...money(S,900000)]},
-{id:"私生飯騷擾",min:18,max:46,once:true,w:S=>(S.track==="cheer"&&S.rank>=1)?9:0,cond:S=>S.track==="cheer",choice:true,q:"你遇上私生飯跟蹤、偷拍、堵門，隱私與人身安全亮紅燈…",
+{id:"球場開球",min:18,max:42,kind:"minor",w:S=>(S.track==="cheer")?14:0,cond:S=>S.track==="cheer",text:"你受邀在滿場球迷前開球、擔任應援主持，全場為你歡呼。",eff:S=>[...inc(S,{chr:2,happy:4}),...money(S,60000)]},
+{id:"代言接不完",min:20,max:42,w:S=>(S.track==="cheer"&&S.rank>=1)?14:0,cond:S=>S.track==="cheer"&&S.rank>=1,text:"人氣高漲，運動品牌、手搖飲、遊戲代言接到手軟。",eff:S=>[...inc(S,{happy:4}),...money(S,900000)]},
+{id:"私生飯騷擾",min:18,max:42,once:true,w:S=>(S.track==="cheer"&&S.rank>=1)?9:0,cond:S=>S.track==="cheer",choice:true,q:"你遇上私生飯跟蹤、偷拍、堵門，隱私與人身安全亮紅燈…",
   options:[
     {t:"報警＋請保鑣",hint:"花錢保平安",eff:S=>[...inc(S,{happy:-3,con:-1}),...money(S,-300000)],res:S=>"你加強維安，稍微安心。"},
     {t:"忍氣吞聲繼續跑通告",hint:"心力交瘁",eff:S=>inc(S,{happy:-6,con:-2}),res:S=>"你把恐懼吞進肚裡。"},
   ]},
-{id:"酸民出征",min:18,max:46,kind:"minor",w:S=>(S.track==="cheer")?12:0,cond:S=>S.track==="cheer",text:"一張被惡意合成的圖在論壇瘋傳，酸民出征你的社群，留言不堪入目。",eff:S=>inc(S,{happy:-4})},
+{id:"酸民出征",min:18,max:42,kind:"minor",w:S=>(S.track==="cheer")?12:0,cond:S=>S.track==="cheer",text:"一張被惡意合成的圖在論壇瘋傳，酸民出征你的社群，留言不堪入目。",eff:S=>inc(S,{happy:-4})},
 {id:"轉戰演藝",min:22,max:40,once:true,w:S=>(S.track==="cheer"&&S.rank>=1&&sk("art")>=2)?10:0,cond:S=>S.track==="cheer"&&S.rank>=1,choice:true,q:"人氣正旺，經紀公司邀你跨足演藝圈、出唱片拍戲…",
   options:[
     {t:"轉戰演藝圈",hint:"更大的舞台",eff:S=>{enterTrack(S,"star",true);S.rank=1;S.income=TRACKS.star.ranks[1].income;mile(S,"🎤","從應援台轉戰演藝圈，簽約出道");return inc(S,{chr:3,happy:5});},res:S=>"你把應援人氣變成演藝資本。"},
     {t:"守住應援台",hint:"熱愛球場",eff:S=>inc(S,{happy:2}),res:S=>"你選擇留在最愛的球場。"},
   ]},
-{id:"啦啦隊退役",min:33,max:44,once:true,w:S=>(S.track==="cheer")?45:0,cond:S=>S.track==="cheer",choice:true,q:"體力與市場都提醒你，應援生涯到了轉換跑道的時刻…",
+{id:"啦啦隊退役",min:34,max:60,once:true,w:S=>(S.track==="cheer")?(S.age>=43?2500:S.age>=40?600:S.age>=37?140:45):0,cond:S=>S.track==="cheer",choice:true,q:S=>S.age>=40?"新人一批批冒出、體力也跟不上了，你已是應援台上的『資深大姊頭』——是時候華麗轉身了…":"體力與市場都提醒你，應援生涯總有轉換跑道的一天，你開始認真思考下一步…",
+  options:S=>{
+    const o=[];
+    o.push({t:"退役轉當經紀／啦啦隊教練",hint:"幕後傳承",eff:S=>{enterTrack(S,"freelance",true);mile(S,"🎀","應援生涯退役，轉戰幕後當經紀／教練");return inc(S,{happy:3});},res:S=>"你把舞台交給後輩，轉身培育新人。"});
+    o.push({t:"用累積人氣創業（手搖飲／網拍／健身房）",hint:"粉絲變顧客",eff:S=>{enterTrack(S,"boss",true);mile(S,"🚀","退役後靠人氣創業當老闆");return [...inc(S,{happy:4,chr:1}),...money(S,300000)];},res:S=>"你把粉絲流量變成了生意。"});
+    o.push({t:"轉型當直播主",hint:"把粉絲帶進直播間",eff:S=>{enterTrack(S,"streamer",true);S.rank=1;S.income=TRACKS.streamer.ranks[1].income;S.flags.everStreamer=true;mile(S,"🎥","退役後轉當直播主，粉絲照樣買單");return inc(S,{happy:4});},res:S=>"你的應援魂延續到了直播台。"});
+    if(sk("art")>=2||S.stats.chr>=72)o.push({t:"進軍演藝圈、拚第二春",hint:"賭更大的舞台",eff:S=>{enterTrack(S,"star",true);S.rank=1;S.income=TRACKS.star.ranks[1].income;mile(S,"🎤","應援退役後轉戰演藝圈");return inc(S,{chr:2,happy:4});},res:S=>"你把應援人氣化為演藝資本。"});
+    if(S.rel==="已婚"||S.rel==="交往中")o.push({t:"淡出舞台、回歸家庭",hint:"相夫教子",eff:S=>{S.stateOverride="退役應援女神";S.track="none";S.income=Math.round((S.income||460000)*0.2);mile(S,"💍","應援女神退役，回歸家庭生活");return inc(S,{happy:5});},res:S=>"你告別鎂光燈，過起平凡幸福的日子。"});
+    return o;
+  }},
+/* 職業啦啦隊——中生涯故事線（人氣、競爭、傷病、感情、年齡焦慮） */
+{id:"應援C位之爭",min:19,max:38,once:true,w:S=>(S.track==="cheer")?18:0,cond:S=>S.track==="cheer",choice:true,q:"隊上要重新排位，人人都想搶下鏡頭最多的『C位』（中央主咖），競爭白熱化…",
   options:[
-    {t:"退役轉當經紀／教練",hint:"幕後發展",eff:S=>{enterTrack(S,"freelance",true);mile(S,"🎀","應援生涯退役，轉戰幕後");return inc(S,{happy:3});},res:S=>"你把舞台交給後輩，轉身幕後。"},
-    {t:"用累積人氣創業",hint:"開手搖飲／網拍",eff:S=>{enterTrack(S,"boss",true);mile(S,"🚀","退役後用累積人氣創業當老闆");return inc(S,{happy:4});},res:S=>"你把粉絲變成顧客。"},
+    {t:"卯足全力拚C位",hint:"顏值／人氣決勝",eff:S=>{S._cWin=chance(S,0.4+(S.stats.chr-65)*0.01);if(S._cWin){S.connections=Math.min(100,S.connections+6);return [...inc(S,{chr:3,happy:5}),...money(S,200000)];}return inc(S,{happy:-4,con:-1});},res:S=>S._cWin?"你站上 C 位，鏡頭與應援聲都給了你。":"C 位落空，你被排到邊邊，有點不是滋味。"},
+    {t:"與隊友和睦、不爭",hint:"重情義",eff:S=>{S.connections=Math.min(100,S.connections+3);return inc(S,{happy:2});},res:S=>"你選擇當暖心的隊友。"},
   ]},
+{id:"應援紅到日本",min:20,max:39,once:true,w:S=>(S.track==="cheer"&&S.rank>=1&&S.stats.chr>=70)?16:0,cond:S=>S.track==="cheer"&&S.rank>=1,text:"你的應援畫面被日本／韓國媒體轉載，一夕爆紅海外，接到跨海代言與見面會邀約，收入翻倍。",eff:S=>{S.flags.cheerStar=true;S.connections=Math.min(100,S.connections+8);return [...inc(S,{chr:5,happy:8}),...money(S,1500000)];}},
+{id:"球員戀情",min:20,max:40,once:true,w:S=>(S.track==="cheer")?11:0,cond:S=>S.track==="cheer"&&(S.rel==="單身"||S.rel==="交往中"),choice:true,q:"你和球隊當家球星／球員互有好感，戀情呼之欲出——但球團有『禁愛令』、粉絲也盯著…",
+  options:[
+    {t:"公開戀情、勇敢愛",hint:"甜蜜但恐掉粉",eff:S=>{S.rel="交往中";if(chance(S,0.5)){return inc(S,{happy:8,chr:-2});}return [...inc(S,{happy:5,chr:-4}),...money(S,-200000)];},res:S=>"你們高調放閃，有人祝福、也有人脫粉。"},
+    {t:"地下情、偷偷來",hint:"怕東窗事發",eff:S=>{S.rel="交往中";if(chance(S,0.55))schedule(S,2+rnd(3),"chain_cheerScandal");return inc(S,{happy:4,con:-1});},res:S=>"你們把感情藏得很好——至少目前是。"},
+  ]},
+{id:"chain_cheerScandal",chain:true,once:true,text:"狗仔跟拍多時，你和球員的地下戀情登上頭條，球團震怒、粉絲炎上，你被推上風口浪尖。",eff:S=>{S.connections=Math.max(0,S.connections-10);return [...inc(S,{happy:-8,chr:-4}),...money(S,-500000)];}},
+{id:"舞蹈傷害",min:22,max:42,once:true,w:S=>(S.track==="cheer")?10:0,cond:S=>S.track==="cheer",choice:true,q:"長年高強度應援舞蹈，你的膝蓋／腰椎亮起紅燈，痛到彎不下腰…",
+  options:[
+    {t:"就醫復健、調整強度",hint:"保住舞台壽命",eff:S=>[...inc(S,{con:-1,happy:1}),...money(S,-200000)],res:S=>"你學會與傷共處，延長了應援生涯。"},
+    {t:"打止痛硬撐、怕被換掉",hint:"賭上身體",eff:S=>inc(S,{con:-6,happy:-3}),res:S=>"你咬牙硬撐，身體卻越來越差。"},
+  ]},
+{id:"新人輩出",min:30,max:41,kind:"minor",w:S=>(S.track==="cheer")?13:0,cond:S=>S.track==="cheer",text:"一批批青春逼人的新人加入應援團，鏡頭與人氣漸漸被分走，你感受到現實的年齡焦慮。",eff:S=>inc(S,{happy:-3,chr:-1})},
 /* ===== 職棒選手：從選秀到看板球星（也可能捲入假球案） ===== */
 {id:"職棒選秀",min:18,max:26,once:true,w:S=>((S.stats.con>=62||sk("ath")>=2)&&["student","service","gig","blue","mil"].includes(S.track))?12:0,cond:S=>!["baseball","esports"].includes(S.track)&&(S.stats.con>=60||sk("ath")>=2),choice:true,q:"你棒球打得好，職棒球團在選秀會上相中你…",
   options:[
@@ -2327,7 +2379,7 @@ const EV=[
     {t:"積極學 AI、讓自己不可取代",hint:"進化",eff:S=>{S.skills.tech=Math.min(skCap("tech"),skXp("tech")+2);if(chance(S,0.5))S.income=Math.round(S.income*1.15);return inc(S,{int:2,happy:1});},res:S=>"你駕馭了浪潮，身價水漲船高。"},
     {t:"排斥新科技、照老方法做",hint:"可能被淘汰",eff:S=>{if(chance(S,0.4))S.income=Math.round(S.income*0.8);return inc(S,{happy:-3,int:-1});},res:S=>"時代的車輪從你身上輾了過去。"},
   ]},
-{id:"世紀疫情",min:10,max:88,once:true,w:10,choice:true,q:"一場世紀大疫情席捲全球，封城、搶物資、居家隔離，生活徹底改變…",
+{id:"世紀疫情",min:10,max:88,once:true,w:S=>S.firedOnce["疫情"]?0:3,cond:S=>!S.firedOnce["疫情"],choice:true,q:"一場世紀大疫情席捲全球，封城、搶物資、居家隔離，生活徹底改變…",
   options:S=>{
     const o=[];
     o.push({t:"超前部署、口罩防疫做好做滿",hint:"顧健康",eff:S=>{S.health=clamp((S.health||70)+2,0,100);return inc(S,{happy:-2});},res:S=>"你謹慎防疫，平安度過。"});
