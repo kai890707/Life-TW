@@ -1881,6 +1881,11 @@ const EV=[
 {id:"職業病",min:35,max:70,kind:"minor",w:S=>["blue","chef","service","gig"].includes(S.track)?12:5,text:"長年勞損，你落下一身職業病（腰、肩、關節）。",eff:S=>inc(S,{con:-4})},
 {id:"破相",min:18,max:70,w:4,text:"一場意外在你臉上／身上留下明顯疤痕。",eff:S=>inc(S,{chr:-8,happy:-3})},
 {id:"失戀",min:16,max:40,w:S=>S.rel==="交往中"?8:0,cond:S=>S.rel==="交往中",text:"你被分手了，痛徹心扉。",eff:S=>{S.rel="單身";return inc(S,{happy:-7});}},
+{id:"半夜牛肉麵",min:18,max:55,once:true,w:S=>S.rel==="交往中"?9:0,cond:S=>S.rel==="交往中",choice:true,q:"三更半夜你突然嘴饞，傳訊叫另一半立刻起床、開車來你住處煮一碗牛肉麵給你吃…",
+  options:[
+    {t:"堅持要吃、不來就是不愛我",hint:"作死一波",eff:S=>{if(chance(S,0.55)){S.rel="單身";mile(S,"🍜","半夜盧另一半來煮牛肉麵，隔天就被甩了");return inc(S,{happy:-8,chr:-2});}return inc(S,{happy:2,con:-1});},res:S=>S.rel==="單身"?"對方默默煮完最後一碗牛肉麵，留下一句『我們不適合』就走了——還被 PO 上網公審，成了經典反面教材。":"對方邊碎念邊摸摸鼻子過來煮了，這次你賭贏了（但別太得意）。"},
+    {t:"算了、自己泡個泡麵",hint:"體貼",eff:S=>inc(S,{happy:1}),res:S=>"你摸摸良心，讓對方好好睡覺，自己泡了碗泡麵。"},
+  ]},
 
 /* ===== 中風／老年重病（扣體質＋腦力＋專長） ===== */
 {id:"中風",min:55,max:95,w:S=>S.stats.con<50?10:4,text:"你中風／罹患重病，身體與腦力都大受影響，一身本事也生疏了。",eff:S=>{skillDecayAll(S,3);return [...inc(S,{con:-8,int:-6,happy:-4}),...money(S,-200000)];}},
